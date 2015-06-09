@@ -4,7 +4,6 @@ function love.load()
 	naveImg = love.graphics.newImage("nave.png")
 	balaImg = love.graphics.newImage("bullet.png")
 	meteoroImg = love.graphics.newImage("meteoro.png")
-	gameoverImg = love.graphics.newImage("gameover.png")
 
 	--Configurações da janela
 	love.window.setMode(0, 0, {vsync=false, fullscreen = true})
@@ -14,45 +13,43 @@ function love.load()
 	--nave
 	nave = {}
 	nave.x = screen_width/2
-	nave.y = screen_height-128
-	nave.speed = 800
+	nave.y = screen_height - 128
+	nave.vSpeed = 600
+	nave.hSpeed = 800
+	nave.tiros = {}
 
 	--bala
 	bala = {}
 	bala.x = 0
 	bala.y = 0
-	bala.speed = 20
-	gameover = false
+	bala.speed = 700
 
-	math.randomseed(os.time())
-
-	--meteoro
-	dropMeteoros(meteoros)
-
+	pontos = 0
 end
 
-function dropMeteoros()
+function atira()
+	local tiro = {}
+	tiro.x = nave.x + naveImg:getWidth()/2 - 10
+	tiro.y = nave.y
+	table.insert(nave.tiros, tiro)
+end
 
-	meteoros = {}
-	for i=1, 15 do
-		meteoro = {}
-		meteoro.x = math.random(0, screen_width - meteoroImg:getWidth())
-		meteoro.y = - math.random(0, screen_height)
-		table.insert(meteoros, meteoro)
+function love.keyreleased(key)
+	if (key == " " or key == "f") then
+		atira()
 	end
 end
 
 function love.update(dt)
+
 	naveMov(dt)
 
-	for i,v in ipairs(meteoros) do
+	for i,v in ipairs(nave.tiros) do
 
-    -- let them fall down slowly
-    v.y = v.y + dt * 55
+        -- move them up up up
+        v.y = v.y - dt * bala.speed
 
 	end
-
-
 end
 
 function love.draw()
@@ -62,33 +59,37 @@ function love.draw()
 
 	love.graphics.print("BETA", 0, 0)
 
-	for i,v in ipairs(meteoros) do
-		love.graphics.draw(meteoroImg, v.x, v.y)
+	for i,v in ipairs(nave.tiros) do
+		love.graphics.draw(balaImg, v.x, v.y)
 	end
+
+	love.graphics.draw(meteoroImg, screen_width/2, screen_height/2)
+
+	love.graphics.print("Pontos: " .. pontos, 0, screen_height * 0.015, 0, 3, 3)
 end
 
 function naveMov(dt)
 	if love.keyboard.isDown ("right") then
 		if nave.x < screen_width - 128 then
-			nave.x = nave.x + (nave.speed * dt)
+			nave.x = nave.x + (nave.hSpeed * dt)
 		end
 	end
 
 	if love.keyboard.isDown ("left") then
 		if nave.x > 0 then
-			nave.x = nave.x - (nave.speed * dt)
+			nave.x = nave.x - (nave.hSpeed * dt)
 		end
 	end
 
 	if love.keyboard.isDown ("down") then
 		if nave.y < screen_height - 128 then
-			nave.y = nave.y + (nave.speed * dt)
+			nave.y = nave.y + (nave.vSpeed * dt)
 		end
 	end
 
 	if love.keyboard.isDown ("up") then
 		if nave.y > 0 then
-			nave.y = nave.y - (nave.speed * dt)
+			nave.y = nave.y - (nave.vSpeed * dt)
 		end
 	end
 
@@ -103,4 +104,11 @@ function desenhaFundo()
 	love.graphics.draw(spaceImg, (screen_width - spaceImg:getWidth())/2, 0, 0, 1, 1)
 	love.graphics.draw(spaceImg, -(screen_width - spaceImg:getWidth())/2, 0, 0, 1, 1)
 	love.graphics.draw(spaceImg, 2*(screen_width - spaceImg:getWidth())/2, 0, 0, 1, 1)
+end
+
+function CheckCollision(x1,y1,w1,h1, x2,y2,w2,h2)
+  return x1 < x2+w2 and
+         x2 < x1+w1 and
+         y1 < y2+h2 and
+         y2 < y1+h1
 end
