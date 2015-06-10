@@ -48,7 +48,10 @@ function love.update(dt)
 
         -- move them up up up
         v.y = v.y - dt * bala.speed
-
+		
+		if CheckCollision (v.x, v.y, balaImg:getWidth(), balaImg:getHeight(), screen_width/2, screen_height/2, meteoroImg:getWidth(), meteoroImg:getHeight()) then
+			pontos = pontos + 1
+		end
 	end
 end
 
@@ -94,7 +97,6 @@ function naveMov(dt)
 	end
 
 	if love.keyboard.isDown (" ") then
-
 		bala.x = nave.x + ((naveImg:getWidth()/2) - 9)
 		bala.y = nave.y - 60
 	end
