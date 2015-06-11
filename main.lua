@@ -4,6 +4,8 @@ function love.load()
 	naveImg = love.graphics.newImage("nave.png")
 	balaImg = love.graphics.newImage("bullet.png")
 	meteoroImg = love.graphics.newImage("meteoro.png")
+	playImg = love.graphics.newImage("play.png")
+	exitImg = love.graphics.newImage("exit.png")
 
 	--Configurações da janela
 	love.window.setMode(0, 0, {vsync=false, fullscreen = true})
@@ -25,11 +27,27 @@ function love.load()
 	bala.speed = 700
 
 	pontos = 0
+	pressed = false
+	
+	--meteoro
+	mSpeed = 200
+	meteoros = {}
+	for i=1, 15 do 
+		meteoro = {}
+		math.randomseed(123 * i)
+		meteoro.x = i * math.random(50, 250)
+		meteoro.y = - (math.random(0, 900))
+		meteoro.width = math.random(0, 3)
+		meteoro.height = meteoro.width
+		meteoro.speed = math.random(100, mSpeed)
+		table.insert(meteoros, meteoro)
+	end
+	
 end
 
 function atira()
 	local tiro = {}
-	tiro.x = nave.x + naveImg:getWidth()/2 - 10
+	tiro.x = nave.x + (naveImg:getWidth()/2) - (balaImg:getWidth()/2)
 	tiro.y = nave.y
 	table.insert(nave.tiros, tiro)
 end
@@ -43,32 +61,54 @@ end
 function love.update(dt)
 
 	naveMov(dt)
+	
+	x, y = love.mouse.getPosition()
 
 	for i,v in ipairs(nave.tiros) do
 
         -- move them up up up
-        v.y = v.y - dt * bala.speed
-		
-		if CheckCollision (v.x, v.y, balaImg:getWidth(), balaImg:getHeight(), screen_width/2, screen_height/2, meteoroImg:getWidth(), meteoroImg:getHeight()) then
-			pontos = pontos + 1
-		end
+        v.y = v.y - (dt * bala.speed)
+
+	end
+	
+	for i, v in ipairs(meteoros) do
+		v.y = v.y + (dt * v.speed)
 	end
 end
 
 function love.draw()
+	
 	desenhaFundo()
+		
+	if pressed then
 
-	love.graphics.draw(naveImg, nave.x, nave.y, 0, 1, 1)
+		love.graphics.draw(naveImg, nave.x, nave.y, 0, 1, 1)
 
-	love.graphics.print("BETA", 0, 0)
+		love.graphics.print("BETA", 0, 0)
 
-	for i,v in ipairs(nave.tiros) do
-		love.graphics.draw(balaImg, v.x, v.y)
+		for i,v in ipairs(nave.tiros) do
+			love.graphics.draw(balaImg, v.x, v.y)
+		end
+		
+		for i, v in ipairs(meteoros) do
+			love.graphics.draw(meteoroImg, v.x, v.y, 0, v.width, v.height)
+		end
+
+		--love.graphics.draw(meteoroImg, screen_width/2, screen_height/2)
+
+		love.graphics.print("Pontos: " .. pontos, 0, screen_height * 0.015, 0, 3, 3)
+	else
+		play = love.graphics.draw(playImg, (screen_width - playImg:getWidth())/3, (screen_height - playImg:getHeight())/2)
+		exit = love.graphics.draw(exitImg, 2*(screen_width - playImg:getWidth())/3, (screen_height - playImg:getHeight())/2)
+		
+		x, y = love.mouse.getPosition()
+		
+		if CheckCollision((screen_width - playImg:getWidth())/3, (screen_height - playImg:getHeight())/2, playImg:getWidth(), playImg:getHeight(), x, y, 5, 5) then
+			if love.mouse.isDown("l") then
+				pressed = true
+			end
+		end
 	end
-
-	love.graphics.draw(meteoroImg, screen_width/2, screen_height/2)
-
-	love.graphics.print("Pontos: " .. pontos, 0, screen_height * 0.015, 0, 3, 3)
 end
 
 function naveMov(dt)
