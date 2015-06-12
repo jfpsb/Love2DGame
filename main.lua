@@ -30,53 +30,47 @@ function love.load()
 	pressed = false
 
 	--meteoro
-
-end
-
-function spawnaMeteoro ()
 	mSpeed = 200
+	inicio = 15
 	meteoros = {}
-	for i=1, 15 do
-		meteoro = {}
-		math.randomseed(os.time() * i)
-		meteoro.x = i * math.random(50, 250)
-		meteoro.y = - (math.random(0, 900))
-		meteoro.width = math.random(0, 3)
-		meteoro.height = meteoro.width
-		meteoro.speed = math.random(100, mSpeed)
-		table.insert(meteoros, meteoro)
-	end
-end
-
-function atira()
-	local tiro = {}
-	tiro.x = nave.x + (naveImg:getWidth()/2) - (balaImg:getWidth()/2)
-	tiro.y = nave.y
-	table.insert(nave.tiros, tiro)
-end
-
-function love.keyreleased(key)
-	if (key == " " or key == "f") then
-		atira()
-	end
 end
 
 function love.update(dt)
 
-	naveMov(dt)
-
-	x, y = love.mouse.getPosition()
-
-	for i,v in ipairs(nave.tiros) do
-
-        --bala sobe
-        v.y = v.y - (dt * bala.speed)
-
-	end
-
 	if pressed then
-		for i, v in ipairs(meteoros) do
-			v.y = v.y + (dt * v.speed)
+
+		naveMov(dt)
+
+		x, y = love.mouse.getPosition()
+
+		--Só desce quando o botao de play for acionado
+		if pressed then
+			for i, v in ipairs(meteoros) do
+				v.y = v.y + (dt * v.speed)
+
+				if v.y > screen_height - 1 then
+					table.remove(meteoros, i)
+				end
+			end
+		end
+
+		for i,v in ipairs(nave.tiros) do
+
+			--bala sobe
+			v.y = v.y - (dt * bala.speed)
+
+			if v.y < 1 then
+				table.remove(nave.tiros, i)
+			end
+
+
+			for ii, vv in ipairs(meteoros) do
+				if (v.x >= vv.x and v.x <= vv.x + (vv.width * meteoroImg:getWidth())) and (v.y >= vv.y and v.y <= vv.y + (vv.height * meteoroImg:getHeight())) then
+					pontos = pontos + 50
+					table.remove(meteoros, ii)
+				end
+			end
+
 		end
 	end
 end
@@ -97,9 +91,20 @@ function love.draw()
 
 		for i, v in ipairs(meteoros) do
 			love.graphics.draw(meteoroImg, v.x, v.y, 0, v.width, v.height)
+			love.graphics.print(#meteoros, screen_width/2, screen_height/2, 0, 5, 5)
+
+			if #meteoros == 5 then
+				mSpeed = mSpeed + 15
+				inicio = inicio + 3
+				spawnaMeteoro()
+			end
 		end
 
-		--love.graphics.draw(meteoroImg, screen_width/2, screen_height/2)
+		for i, v in ipairs(meteoros) do
+			if CheckCollision(nave.x, nave.y, naveImg:getWidth(), naveImg:getHeight(), v.x, v.y, (v.width * meteoroImg:getWidth()), (v.height * meteoroImg:getHeight())) then
+				love.graphics.print("GAMEOVER", screen_width/2, screen_height/2)
+			end
+		end
 
 		love.graphics.print("Pontos: " .. pontos, 0, screen_height * 0.015, 0, 3, 3)
 	else
@@ -117,6 +122,36 @@ function love.draw()
 	end
 end
 
+--Cria na tela os meteoros
+function spawnaMeteoro ()
+	for i=1, inicio do
+		meteoro = {}
+		math.randomseed(os.time() + i)
+		meteoro.x = math.random(naveImg:getWidth()/2, screen_width - naveImg:getWidth())
+		meteoro.y = - (math.random(0, 900))
+		meteoro.width = math.random(0, 3)
+		meteoro.height = meteoro.width
+		meteoro.speed = math.random(100, mSpeed)
+		table.insert(meteoros, meteoro)
+	end
+end
+
+--Cria os tiros baseados na posiçào da nave e os guarda em uma tabela
+function atira()
+	local tiro = {}
+	tiro.x = nave.x + (naveImg:getWidth()/2) - (balaImg:getWidth()/2)
+	tiro.y = nave.y
+	table.insert(nave.tiros, tiro)
+end
+
+--Ao liberar a tecla espaço aciona o método atira()
+function love.keyreleased(key)
+	if (key == " " or key == "f") then
+		atira()
+	end
+end
+
+--Manipula o movimento da nave
 function naveMov(dt)
 	if love.keyboard.isDown ("right") then
 		if nave.x < screen_width - 128 then
@@ -148,6 +183,7 @@ function naveMov(dt)
 	end
 end
 
+--Desenha o background
 function desenhaFundo()
 	love.graphics.draw(spaceImg, (screen_width - spaceImg:getWidth())/2, 0, 0, 1, 1)
 	love.graphics.draw(spaceImg, -(screen_width - spaceImg:getWidth())/2, 0, 0, 1, 1)
