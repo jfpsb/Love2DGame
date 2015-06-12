@@ -26,13 +26,13 @@ function love.load()
 	bala.y = 0
 	bala.speed = 700
 
-	pontos = 0
-	pressed = false
+	pontos = 0 --pontos do jogador
+	pressed = false --pressed recebe true quando o usuário apertar no botão play do menu
 
 	--meteoro
-	mSpeed = 200
-	inicio = 15
-	meteoros = {}
+	mSpeed = 200 --velocidade inicial
+	inicio = 15 --quantidade da primeira onda
+	meteoros = {} --vetor para guardar meteoros
 end
 
 function love.update(dt)
@@ -59,15 +59,16 @@ function love.update(dt)
 			--bala sobe
 			v.y = v.y - (dt * bala.speed)
 
+			--remove balas que ficarem fora do range da tela
 			if v.y < 1 then
 				table.remove(nave.tiros, i)
 			end
 
-
+			--checa se algum meteoro foi acertado por alguma bala
 			for ii, vv in ipairs(meteoros) do
 				if (v.x >= vv.x and v.x <= vv.x + (vv.width * meteoroImg:getWidth())) and (v.y >= vv.y and v.y <= vv.y + (vv.height * meteoroImg:getHeight())) then
 					pontos = pontos + 50
-					table.remove(meteoros, ii)
+					table.remove(meteoros, ii) --remove o meteoro acertado por bala
 				end
 			end
 
@@ -93,7 +94,7 @@ function love.draw()
 			love.graphics.draw(meteoroImg, v.x, v.y, 0, v.width, v.height)
 			love.graphics.print(#meteoros, screen_width/2, screen_height/2, 0, 5, 5)
 
-			if #meteoros == 5 then
+			if #meteoros == 1 then
 				mSpeed = mSpeed + 15
 				inicio = inicio + 3
 				spawnaMeteoro()
@@ -136,7 +137,7 @@ function spawnaMeteoro ()
 	end
 end
 
---Cria os tiros baseados na posiçào da nave e os guarda em uma tabela
+--Cria os tiros baseados na posiçào da nave e guarda-os em uma tabela
 function atira()
 	local tiro = {}
 	tiro.x = nave.x + (naveImg:getWidth()/2) - (balaImg:getWidth()/2)
@@ -151,7 +152,7 @@ function love.keyreleased(key)
 	end
 end
 
---Manipula o movimento da nave
+--Manipula o movimento e ação da nave
 function naveMov(dt)
 	if love.keyboard.isDown ("right") then
 		if nave.x < screen_width - 128 then
