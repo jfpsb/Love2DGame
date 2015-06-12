@@ -30,9 +30,14 @@ function love.load()
 	pressed = false --pressed recebe true quando o usuário apertar no botão play do menu
 
 	--meteoro
-	mSpeed = 200 --velocidade inicial
+	minSpeed = 75 --velocidade inicial
+	maxSpeed = 175
 	inicio = 15 --quantidade da primeira onda
 	meteoros = {} --vetor para guardar meteoros
+
+	bateus = {}
+
+	math.randomseed(os.time())
 end
 
 function love.update(dt)
@@ -50,6 +55,7 @@ function love.update(dt)
 
 				if v.y > screen_height - 1 then
 					table.remove(meteoros, i)
+					pontos = pontos - 25
 				end
 			end
 		end
@@ -73,6 +79,21 @@ function love.update(dt)
 			end
 
 		end
+
+		for i, v in ipairs(meteoros) do
+			if CheckCollision(nave.x, nave.y, naveImg:getWidth(), naveImg:getHeight(), v.x, v.y, (v.width * meteoroImg:getWidth()), (v.height * meteoroImg:getHeight())) then
+				table.remove(meteoros, i)
+
+				local bateu = {}
+				bateu.x = nave.x
+				bateu.y = nave.y
+				bateu.a = 255
+
+				table.insert(bateus, bateu)
+
+				pontos = pontos - 100
+			end
+		end
 	end
 end
 
@@ -95,17 +116,22 @@ function love.draw()
 			love.graphics.print(#meteoros, screen_width/2, screen_height/2, 0, 5, 5)
 
 			if #meteoros == 1 then
-				mSpeed = mSpeed + 15
-				inicio = inicio + 3
+				maxSpeed = maxSpeed + 10
+				minSpeed = minSpeed + 5
+				inicio = inicio + 2
 				spawnaMeteoro()
 			end
 		end
 
-		for i, v in ipairs(meteoros) do
-			if CheckCollision(nave.x, nave.y, naveImg:getWidth(), naveImg:getHeight(), v.x, v.y, (v.width * meteoroImg:getWidth()), (v.height * meteoroImg:getHeight())) then
-				love.graphics.print("GAMEOVER", screen_width/2, screen_height/2)
+		for i, v in ipairs (bateus) do
+			if v.a > 0 then
+				love.graphics.setColor(255, 0, 0, v.a)
+				v.a = v.a - 0.2
+				love.graphics.print("-100", v.x, v.y, 0, 4, 4)
 			end
 		end
+
+		love.graphics.setColor(255, 255, 255)
 
 		love.graphics.print("Pontos: " .. pontos, 0, screen_height * 0.015, 0, 3, 3)
 	else
@@ -127,12 +153,11 @@ end
 function spawnaMeteoro ()
 	for i=1, inicio do
 		meteoro = {}
-		math.randomseed(os.time() + i)
-		meteoro.x = math.random(naveImg:getWidth()/2, screen_width - naveImg:getWidth())
-		meteoro.y = - (math.random(0, 900))
-		meteoro.width = math.random(0, 3)
+		meteoro.width = math.random(1, 3)
 		meteoro.height = meteoro.width
-		meteoro.speed = math.random(100, mSpeed)
+		meteoro.x = math.random(naveImg:getWidth()/2, screen_width - naveImg:getWidth())
+		meteoro.y = - (math.random((meteoroImg:getWidth() * meteoro.width), 900))
+		meteoro.speed = math.random(minSpeed, maxSpeed)
 		table.insert(meteoros, meteoro)
 	end
 end
