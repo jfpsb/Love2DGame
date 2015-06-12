@@ -162,7 +162,7 @@ function love.draw()
 		for i, v in ipairs (bateus) do
 			if v.a > 0 then
 				love.graphics.setColor(255, 0, 0, v.a)
-				v.a = v.a - 0.2
+				v.a = v.a - 2
 				love.graphics.print("-100", v.x, v.y, 0, 4, 4)
 			end
 		end
@@ -170,7 +170,7 @@ function love.draw()
 		for i, v in ipairs(acertos) do
 			if v.a > 0 then
 				love.graphics.setColor(0, 255, 0, v.a)
-				v.a = v.a - 0.2
+				v.a = v.a - 2
 				love.graphics.print("+50", v.x, v.y, 0, 4, 4)
 			end
 		end
@@ -178,7 +178,7 @@ function love.draw()
 		for i, v in ipairs(perdidos) do
 			if v.a > 0 then
 				love.graphics.setColor(255, 0, 0, v.a)
-				v.a = v.a - 0.2
+				v.a = v.a - 2
 				love.graphics.print("-50", v.x, v.y, 0, 4, 4)
 			end
 		end
@@ -215,20 +215,11 @@ end
 function gameover()
 	love.graphics.setColor(255, 255, 255)
 
-	retangulo.x = (screen_width - screen_width * 0.7)/2
-	retangulo.y = (screen_height - screen_height * 0.7)/2
-	retangulo.width = (screen_width * 0.7)
-	retangulo.height = (screen_height * 0.7)
-
-	gameoverrr = {}
-	gameoverrr.x = (screen_width - gameoverImg:getWidth())/2
-	gameoverrr.y = ((screen_height - retangulo.height)/2)
-
-	love.graphics.rectangle("fill", retangulo.x, retangulo.y, retangulo.width, retangulo.height)
-	love.graphics.draw(gameoverImg, gameoverrr.x, gameoverrr.y + 50)
-	love.graphics.draw(exitMenu, screen_width - (screen_width - retangulo.width)/2 - exitMenu:getWidth() - 30, retangulo.height)
+	love.graphics.rectangle("fill", 0, 0, screen_width, screen_height)
+	love.graphics.draw(gameoverImg, (screen_width - gameoverImg:getWidth())/2, 50)
+	love.graphics.draw(exitMenu, (screen_width - exitMenu:getWidth()), screen_height - exitMenu:getHeight())
 	love.graphics.setColor(0, 0, 0)
-	love.graphics.print("Balas gastas: " .. shotsFired, gameoverrr.x, gameoverrr.y + 200, 0, 3, 3)
+	love.graphics.print("Balas gastas: " .. shotsFired, screen_width/2, 350, 0, 2, 2)
 	love.graphics.setColor(255, 255, 255)
 end
 
