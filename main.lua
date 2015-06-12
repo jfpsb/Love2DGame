@@ -28,13 +28,17 @@ function love.load()
 
 	pontos = 0
 	pressed = false
-	
+
 	--meteoro
+
+end
+
+function spawnaMeteoro ()
 	mSpeed = 200
 	meteoros = {}
-	for i=1, 15 do 
+	for i=1, 15 do
 		meteoro = {}
-		math.randomseed(123 * i)
+		math.randomseed(os.time() * i)
 		meteoro.x = i * math.random(50, 250)
 		meteoro.y = - (math.random(0, 900))
 		meteoro.width = math.random(0, 3)
@@ -42,7 +46,6 @@ function love.load()
 		meteoro.speed = math.random(100, mSpeed)
 		table.insert(meteoros, meteoro)
 	end
-	
 end
 
 function atira()
@@ -61,25 +64,27 @@ end
 function love.update(dt)
 
 	naveMov(dt)
-	
+
 	x, y = love.mouse.getPosition()
 
 	for i,v in ipairs(nave.tiros) do
 
-        -- move them up up up
+        --bala sobe
         v.y = v.y - (dt * bala.speed)
 
 	end
-	
-	for i, v in ipairs(meteoros) do
-		v.y = v.y + (dt * v.speed)
+
+	if pressed then
+		for i, v in ipairs(meteoros) do
+			v.y = v.y + (dt * v.speed)
+		end
 	end
 end
 
 function love.draw()
-	
+
 	desenhaFundo()
-		
+
 	if pressed then
 
 		love.graphics.draw(naveImg, nave.x, nave.y, 0, 1, 1)
@@ -89,7 +94,7 @@ function love.draw()
 		for i,v in ipairs(nave.tiros) do
 			love.graphics.draw(balaImg, v.x, v.y)
 		end
-		
+
 		for i, v in ipairs(meteoros) do
 			love.graphics.draw(meteoroImg, v.x, v.y, 0, v.width, v.height)
 		end
@@ -99,13 +104,14 @@ function love.draw()
 		love.graphics.print("Pontos: " .. pontos, 0, screen_height * 0.015, 0, 3, 3)
 	else
 		play = love.graphics.draw(playImg, (screen_width - playImg:getWidth())/3, (screen_height - playImg:getHeight())/2)
-		exit = love.graphics.draw(exitImg, 2*(screen_width - playImg:getWidth())/3, (screen_height - playImg:getHeight())/2)
-		
+		exit = love.graphics.draw(exitImg, 2*(screen_width - playImg:getWidth())/3, (screen_height - playImg:getHeight())/2, 0, 2, 2)
+
 		x, y = love.mouse.getPosition()
-		
+
 		if CheckCollision((screen_width - playImg:getWidth())/3, (screen_height - playImg:getHeight())/2, playImg:getWidth(), playImg:getHeight(), x, y, 5, 5) then
 			if love.mouse.isDown("l") then
 				pressed = true
+				spawnaMeteoro()
 			end
 		end
 	end
