@@ -6,6 +6,7 @@ function love.load()
 	meteoroImg = love.graphics.newImage("meteoro.png")
 	playImg = love.graphics.newImage("play.png")
 	exitImg = love.graphics.newImage("exit.png")
+	gameoverImg = love.graphics.newImage("gameover.png")
 
 	--Configurações da janela
 	love.window.setMode(0, 0, {vsync=false, fullscreen = true})
@@ -26,7 +27,7 @@ function love.load()
 	bala.y = 0
 	bala.speed = 700
 
-	pontos = 0 --pontos do jogador
+	pontos = 1000 --pontos do jogador
 	pressed = false --pressed recebe true quando o usuário apertar no botão play do menu
 
 	--meteoro
@@ -36,13 +37,26 @@ function love.load()
 	meteoros = {} --vetor para guardar meteoros
 
 	bateus = {}
+	acertos = {}
+	perdidos = {} --meteoros perdidos
+
+	startTime = love.timer.getTime()
+
 
 	math.randomseed(os.time())
 end
 
+function isGameOver()
+	if pontos < 0 then
+		return true
+	else
+		return false
+	end
+end
+
 function love.update(dt)
 
-	if pressed then
+	if pressed  and isGameOver() == false then
 
 		naveMov(dt)
 
@@ -55,7 +69,14 @@ function love.update(dt)
 
 				if v.y > screen_height - 1 then
 					table.remove(meteoros, i)
-					pontos = pontos - 25
+					pontos = pontos - 50
+
+					perdido = {}
+					perdido.x = v.x
+					perdido.y = screen_height - 50
+					perdido.a = 255
+
+					table.insert(perdidos, perdido)
 				end
 			end
 		end
@@ -75,6 +96,14 @@ function love.update(dt)
 				if (v.x >= vv.x and v.x <= vv.x + (vv.width * meteoroImg:getWidth())) and (v.y >= vv.y and v.y <= vv.y + (vv.height * meteoroImg:getHeight())) then
 					pontos = pontos + 50
 					table.remove(meteoros, ii) --remove o meteoro acertado por bala
+					table.remove(nave.tiros, i) --remove bala que acertou meteoro
+
+					local acertou = {}
+					acertou.x = vv.x
+					acertou.y = vv.y
+					acertou.a = 255
+
+					table.insert(acertos, acertou)
 				end
 			end
 
@@ -101,7 +130,7 @@ function love.draw()
 
 	desenhaFundo()
 
-	if pressed then
+	if pressed and isGameOver() == false then
 
 		love.graphics.draw(naveImg, nave.x, nave.y, 0, 1, 1)
 
@@ -131,22 +160,55 @@ function love.draw()
 			end
 		end
 
+		for i, v in ipairs(acertos) do
+			if v.a > 0 then
+				love.graphics.setColor(0, 255, 0, v.a)
+				v.a = v.a - 0.2
+				love.graphics.print("+50", v.x, v.y, 0, 4, 4)
+			end
+		end
+
+		for i, v in ipairs(perdidos) do
+			if v.a > 0 then
+				love.graphics.setColor(255, 0, 0, v.a)
+				v.a = v.a - 0.2
+				love.graphics.print("-50", v.x, v.y, 0, 4, 4)
+			end
+		end
+
 		love.graphics.setColor(255, 255, 255)
 
 		love.graphics.print("Pontos: " .. pontos, 0, screen_height * 0.015, 0, 3, 3)
 	else
-		play = love.graphics.draw(playImg, (screen_width - playImg:getWidth())/3, (screen_height - playImg:getHeight())/2)
-		exit = love.graphics.draw(exitImg, 2*(screen_width - playImg:getWidth())/3, (screen_height - playImg:getHeight())/2, 0, 2, 2)
-
-		x, y = love.mouse.getPosition()
-
-		if CheckCollision((screen_width - playImg:getWidth())/3, (screen_height - playImg:getHeight())/2, playImg:getWidth(), playImg:getHeight(), x, y, 5, 5) then
-			if love.mouse.isDown("l") then
-				pressed = true
-				spawnaMeteoro()
+		if pressed == false and isGameOver() == false then
+			menu()
+		else
+			if pressed and isGameOver() then
+				gameover()
 			end
 		end
 	end
+end
+
+--menu
+function menu()
+	play = love.graphics.draw(playImg, (screen_width - playImg:getWidth())/3, (screen_height - playImg:getHeight())/2)
+	exit = love.graphics.draw(exitImg, 2*(screen_width - playImg:getWidth())/3, (screen_height - playImg:getHeight())/2, 0, 2, 2)
+
+	x, y = love.mouse.getPosition()
+
+	if CheckCollision((screen_width - playImg:getWidth())/3, (screen_height - playImg:getHeight())/2, playImg:getWidth(), playImg:getHeight(), x, y, 5, 5) then
+		if love.mouse.isDown("l") then
+			pressed = true
+			spawnaMeteoro()
+		end
+	end
+end
+
+function gameover()
+	love.graphics.setColor(255, 255, 255)
+	retangulo = love.graphics.rectangle("fill", (screen_width - screen_width * 0.7)/2, (screen_height - screen_height * 0.7)/2, screen_width * 0.7, screen_height * 0.7)
+	love.graphics.draw(gameoverImg, (((screen_width - screen_width * 0.7)/2) + gameoverImg:getWidth())/2, ((screen_height - screen_height * 0.7)/2) + 50)
 end
 
 --Cria na tela os meteoros
