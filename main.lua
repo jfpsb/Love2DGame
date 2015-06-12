@@ -6,6 +6,7 @@ function love.load()
 	meteoroImg = love.graphics.newImage("meteoro.png")
 	playImg = love.graphics.newImage("play.png")
 	exitImg = love.graphics.newImage("exit.png")
+	exitMenu = love.graphics.newImage("exitMenu.png")
 	gameoverImg = love.graphics.newImage("gameover.png")
 
 	--Configurações da janela
@@ -39,9 +40,15 @@ function love.load()
 	bateus = {}
 	acertos = {}
 	perdidos = {} --meteoros perdidos
+	retangulo = {}
 
 	startTime = love.timer.getTime()
 
+	--contadores
+	shotsFired = 0
+	meteorosDown = 0
+	meteorosLost = 0
+	hitCount = 0
 
 	math.randomseed(os.time())
 end
@@ -207,8 +214,22 @@ end
 
 function gameover()
 	love.graphics.setColor(255, 255, 255)
-	retangulo = love.graphics.rectangle("fill", (screen_width - screen_width * 0.7)/2, (screen_height - screen_height * 0.7)/2, screen_width * 0.7, screen_height * 0.7)
-	love.graphics.draw(gameoverImg, (((screen_width - screen_width * 0.7)/2) + gameoverImg:getWidth())/2, ((screen_height - screen_height * 0.7)/2) + 50)
+
+	retangulo.x = (screen_width - screen_width * 0.7)/2
+	retangulo.y = (screen_height - screen_height * 0.7)/2
+	retangulo.width = (screen_width * 0.7)
+	retangulo.height = (screen_height * 0.7)
+
+	gameoverrr = {}
+	gameoverrr.x = (screen_width - gameoverImg:getWidth())/2
+	gameoverrr.y = ((screen_height - retangulo.height)/2)
+
+	love.graphics.rectangle("fill", retangulo.x, retangulo.y, retangulo.width, retangulo.height)
+	love.graphics.draw(gameoverImg, gameoverrr.x, gameoverrr.y + 50)
+	love.graphics.draw(exitMenu, screen_width - (screen_width - retangulo.width)/2 - exitMenu:getWidth() - 30, retangulo.height)
+	love.graphics.setColor(0, 0, 0)
+	love.graphics.print("Balas gastas: " .. shotsFired, gameoverrr.x, gameoverrr.y + 200, 0, 3, 3)
+	love.graphics.setColor(255, 255, 255)
 end
 
 --Cria na tela os meteoros
@@ -230,6 +251,7 @@ function atira()
 	tiro.x = nave.x + (naveImg:getWidth()/2) - (balaImg:getWidth()/2)
 	tiro.y = nave.y
 	table.insert(nave.tiros, tiro)
+	shotsFired = shotsFired + 1
 end
 
 --Ao liberar a tecla espaço aciona o método atira()
