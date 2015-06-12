@@ -162,7 +162,7 @@ function love.draw()
 		for i, v in ipairs (bateus) do
 			if v.a > 0 then
 				love.graphics.setColor(255, 0, 0, v.a)
-				v.a = v.a - 2
+				v.a = v.a - (love.timer.getDelta() * 200)
 				love.graphics.print("-100", v.x, v.y, 0, 4, 4)
 			end
 		end
@@ -170,7 +170,7 @@ function love.draw()
 		for i, v in ipairs(acertos) do
 			if v.a > 0 then
 				love.graphics.setColor(0, 255, 0, v.a)
-				v.a = v.a - 2
+				v.a = v.a - (love.timer.getDelta() * 200)
 				love.graphics.print("+50", v.x, v.y, 0, 4, 4)
 			end
 		end
@@ -178,7 +178,7 @@ function love.draw()
 		for i, v in ipairs(perdidos) do
 			if v.a > 0 then
 				love.graphics.setColor(255, 0, 0, v.a)
-				v.a = v.a - 2
+				v.a = v.a - (love.timer.getDelta() * 200)
 				love.graphics.print("-50", v.x, v.y, 0, 4, 4)
 			end
 		end
