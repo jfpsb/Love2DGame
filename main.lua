@@ -8,6 +8,9 @@ function love.load()
 	exitImg = love.graphics.newImage("exit.png")
 	exitMenu = love.graphics.newImage("exitMenu.png")
 	gameoverImg = love.graphics.newImage("gameover.png")
+	balaDisp = love.graphics.newImage("balasDisp.png")
+	meteoroDownImg = love.graphics.newImage("meteoroDown.png")
+	meteoroPerdidoImg = love.graphics.newImage("meteoroLost.png")
 
 	--Configurações da janela
 	love.window.setMode(0, 0, {vsync=false, fullscreen = true})
@@ -26,21 +29,21 @@ function love.load()
 	bala = {}
 	bala.x = 0
 	bala.y = 0
-	bala.speed = 700
+	bala.speed = 1000
+	bala.som = tiroSound
 
 	pontos = 1000 --pontos do jogador
 	pressed = false --pressed recebe true quando o usuário apertar no botão play do menu
 
 	--meteoro
-	minSpeed = 75 --velocidade inicial
-	maxSpeed = 175
+	minSpeed = 75 --velocidade mínima inicial
+	maxSpeed = 150 --velocidade máxima inicial
 	inicio = 15 --quantidade da primeira onda
 	meteoros = {} --vetor para guardar meteoros
 
-	bateus = {}
-	acertos = {}
+	bateus = {} --guarda a localização do meteoro quando a nave bate nele
+	acertos = {} --guarda a localização do meteoro quando a nave acerta um tiro nele
 	perdidos = {} --meteoros perdidos
-	retangulo = {}
 
 	startTime = love.timer.getTime()
 
@@ -49,6 +52,7 @@ function love.load()
 	meteorosDown = 0
 	meteorosLost = 0
 	hitCount = 0
+	onda = 1
 
 	math.randomseed(os.time())
 end
@@ -61,9 +65,23 @@ function isGameOver()
 	end
 end
 
+function isMeteorosEmpty (meteoros)
+	if next (meteoros) == nil then
+		if onda%5==0 then
+			maxSpeed = maxSpeed + 5
+			minSpeed = minSpeed + 3
+		end
+		inicio = inicio + 2
+		onda = onda + 1
+		spawnaMeteoro()
+	end
+end
+
 function love.update(dt)
 
 	if pressed  and isGameOver() == false then
+
+		isMeteorosEmpty(meteoros)
 
 		naveMov(dt)
 
@@ -83,6 +101,8 @@ function love.update(dt)
 					perdido.y = screen_height - 50
 					perdido.a = 255
 
+					meteorosLost = meteorosLost + 1
+
 					table.insert(perdidos, perdido)
 				end
 			end
@@ -100,10 +120,11 @@ function love.update(dt)
 
 			--checa se algum meteoro foi acertado por alguma bala
 			for ii, vv in ipairs(meteoros) do
-				if (v.x >= vv.x and v.x <= vv.x + (vv.width * meteoroImg:getWidth())) and (v.y >= vv.y and v.y <= vv.y + (vv.height * meteoroImg:getHeight())) then
+				if CheckCollision(v.x, v.y, balaImg:getWidth(), balaImg:getHeight(), vv.x, vv.y, (meteoroImg:getWidth() * vv.width), (meteoroImg:getHeight() * vv.height)) then
 					pontos = pontos + 50
 					table.remove(meteoros, ii) --remove o meteoro acertado por bala
 					table.remove(nave.tiros, i) --remove bala que acertou meteoro
+					meteorosDown = meteorosDown + 1
 
 					local acertou = {}
 					acertou.x = vv.x
@@ -139,6 +160,8 @@ function love.draw()
 
 	if pressed and isGameOver() == false then
 
+		love.audio.stop()
+
 		love.graphics.draw(naveImg, nave.x, nave.y, 0, 1, 1)
 
 		love.graphics.print("BETA", 0, 0)
@@ -149,14 +172,9 @@ function love.draw()
 
 		for i, v in ipairs(meteoros) do
 			love.graphics.draw(meteoroImg, v.x, v.y, 0, v.width, v.height)
-			love.graphics.print(#meteoros, screen_width/2, screen_height/2, 0, 5, 5)
 
-			if #meteoros == 1 then
-				maxSpeed = maxSpeed + 10
-				minSpeed = minSpeed + 5
-				inicio = inicio + 2
-				spawnaMeteoro()
-			end
+			love.graphics.print("Onda: " .. onda, screen_width * 0.9, screen_height * 0.1, 0, 2, 2)
+			love.graphics.print("Meteoros restantes: " .. #meteoros, screen_width * 0.8, screen_height * 0.15, 0, 2, 2)
 		end
 
 		for i, v in ipairs (bateus) do
@@ -213,13 +231,20 @@ function menu()
 end
 
 function gameover()
+	endTime = love.timer.getTime()
+
 	love.graphics.setColor(255, 255, 255)
 
 	love.graphics.rectangle("fill", 0, 0, screen_width, screen_height)
 	love.graphics.draw(gameoverImg, (screen_width - gameoverImg:getWidth())/2, 50)
 	love.graphics.draw(exitMenu, (screen_width - exitMenu:getWidth()), screen_height - exitMenu:getHeight())
+	love.graphics.draw(balaDisp, screen_width * 0.2, screen_height * 0.3, 0, 1, 1)
+	love.graphics.draw(meteoroDownImg, screen_width * 0.2, screen_height * 0.4, 0, 1, 1)
+	love.graphics.draw(meteoroPerdidoImg, screen_width * 0.2, screen_height * 0.5, 0, 1, 1)
 	love.graphics.setColor(0, 0, 0)
-	love.graphics.print("Balas gastas: " .. shotsFired, screen_width/2, 350, 0, 2, 2)
+	love.graphics.print(shotsFired, (screen_width * 0.2) + balaDisp:getWidth() + 20, (screen_height * 0.3) + (balaDisp:getHeight()/2) - 14, 0, 2, 2)
+	love.graphics.print(meteorosDown, (screen_width * 0.2) + meteoroDownImg:getWidth() + 20, (screen_height * 0.4) + (meteoroDownImg:getHeight()/2) - 14, 0, 2, 2)
+	love.graphics.print(meteorosLost, (screen_width * 0.2) + meteoroPerdidoImg:getWidth() + 20, (screen_height * 0.5) + (meteoroPerdidoImg:getHeight()/2) - 14, 0, 2, 2)
 	love.graphics.setColor(255, 255, 255)
 end
 
@@ -241,13 +266,14 @@ function atira()
 	local tiro = {}
 	tiro.x = nave.x + (naveImg:getWidth()/2) - (balaImg:getWidth()/2)
 	tiro.y = nave.y
+	tiro.som = bala.som
 	table.insert(nave.tiros, tiro)
 	shotsFired = shotsFired + 1
 end
 
 --Ao liberar a tecla espaço aciona o método atira()
 function love.keyreleased(key)
-	if (key == " " or key == "f") then
+	if (key == " " or key == "f") and isGameOver() == false then
 		atira()
 	end
 end
