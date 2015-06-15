@@ -12,6 +12,7 @@ function love.load()
 	meteoroDownImg = love.graphics.newImage("meteoroDown.png")
 	meteoroPerdidoImg = love.graphics.newImage("meteoroLost.png")
 	colisaoImg = love.graphics.newImage("colisao.png")
+	precisaoImg = love.graphics.newImage("precisao.png")
 
 	--Configurações da janela
 	love.window.setMode(0, 0, {vsync=false, fullscreen = true})
@@ -45,16 +46,14 @@ function love.load()
 	acertos = {} --guarda a localização do meteoro quando a nave acerta um tiro nele
 	perdidos = {} --meteoros perdidos
 
-	startTime = love.timer.getTime()
+	startTime = love.timer.getTime() --tempo de início de partida
 
 	--contadores
-	shotsFired = 0
-	meteorosDown = 0
-	meteorosLost = 0
-	hitCount = 0
-	onda = 1
-
-	math.randomseed(os.time())
+	shotsFired = 0 --tiros efetuados
+	meteorosDown = 0 --meteoros abatidos
+	meteorosLost = 0 --meteoros perdidos
+	hitCount = 0 --quantidade de vezes que a nave bate em meteoros
+	onda = 1 --número de ondas
 end
 
 function isGameOver()
@@ -233,6 +232,14 @@ function menu()
 end
 
 function gameover()
+	X = screen_width * 0.2
+	Y = screen_height * 0.3
+
+	hSpace = screen_width * 0.05
+	vSpace = screen_height * 0.15
+
+	inBetweenSpace = screen_width * 0.005
+
 	endTime = love.timer.getTime()
 
 	love.graphics.setColor(255, 255, 255)
@@ -240,15 +247,24 @@ function gameover()
 	love.graphics.rectangle("fill", 0, 0, screen_width, screen_height)
 	love.graphics.draw(gameoverImg, (screen_width - gameoverImg:getWidth())/2, 50)
 	love.graphics.draw(exitMenu, (screen_width - exitMenu:getWidth()), screen_height - exitMenu:getHeight())
-	love.graphics.draw(balaDisp, screen_width * 0.2, screen_height * 0.3, 0, 1, 1)
-	love.graphics.draw(meteoroDownImg, screen_width * 0.2, screen_height * 0.4, 0, 1, 1)
-	love.graphics.draw(meteoroPerdidoImg, screen_width * 0.2, screen_height * 0.5, 0, 1, 1)
-	love.graphics.draw(colisaoImg, screen_width * 0.2, screen_height * 0.6, 0, 1, 1)
+	love.graphics.draw(balaDisp, X, Y, 0, 1, 1)
+	love.graphics.draw(meteoroDownImg, X + balaDisp:getWidth() + hSpace, Y, 0, 1, 1)
+	love.graphics.draw(meteoroPerdidoImg, X +  balaDisp:getWidth() + (hSpace * 2) + meteoroDownImg:getWidth(), Y, 0, 1, 1)
+	love.graphics.draw(colisaoImg, X, Y + vSpace, 0, 1, 1)
+	love.graphics.draw(precisaoImg, X + colisaoImg:getWidth() + hSpace, Y + vSpace, 0, 1, 1)
 	love.graphics.setColor(0, 0, 0)
-	love.graphics.print(shotsFired, (screen_width * 0.2) + balaDisp:getWidth() + 20, (screen_height * 0.3) + (balaDisp:getHeight()/2) - 14, 0, 2, 2)
-	love.graphics.print(meteorosDown, (screen_width * 0.2) + meteoroDownImg:getWidth() + 20, (screen_height * 0.4) + (meteoroDownImg:getHeight()/2) - 14, 0, 2, 2)
-	love.graphics.print(meteorosLost, (screen_width * 0.2) + meteoroPerdidoImg:getWidth() + 20, (screen_height * 0.5) + (meteoroPerdidoImg:getHeight()/2) - 14, 0, 2, 2)
-	love.graphics.print(hitCount, (screen_width * 0.2) + colisaoImg:getWidth() + 20, (screen_height * 0.6) + (colisaoImg:getHeight()/2) - 14, 0, 2, 2)
+	love.graphics.print(shotsFired, X + balaDisp:getWidth() + inBetweenSpace, (screen_height * 0.3) + (balaDisp:getHeight()/2) - 14, 0, 2, 2)
+	love.graphics.print(meteorosDown, X + balaDisp:getWidth() + hSpace + meteoroDownImg:getWidth() + inBetweenSpace, (screen_height * 0.3) + (meteoroDownImg:getHeight()/2) - 14, 0, 2, 2)
+	love.graphics.print(meteorosLost, X + balaDisp:getWidth() + (hSpace * 2) + meteoroDownImg:getWidth() + meteoroPerdidoImg:getWidth() + inBetweenSpace, (screen_height * 0.3) + (meteoroPerdidoImg:getHeight()/2) - 14, 0, 2, 2)
+	love.graphics.print(hitCount, X + colisaoImg:getWidth() + inBetweenSpace, Y + vSpace + (colisaoImg:getHeight()/2) - 14, 0, 2, 2)
+
+	if shotsFired == 0 then
+		precisao = 0
+	else
+		precisao = meteorosDown/shotsFired
+	end
+
+	love.graphics.print((math.floor(precisao*100)) .. "%", X + colisaoImg:getWidth() + precisaoImg:getWidth() + hSpace + inBetweenSpace, Y + vSpace + (precisaoImg:getHeight()/2) - 14, 0, 2, 2)
 	love.graphics.setColor(255, 255, 255)
 end
 
@@ -256,6 +272,7 @@ end
 function spawnaMeteoro ()
 	for i=1, inicio do
 		meteoro = {}
+		math.randomseed(os.time() * i)
 		meteoro.width = math.random(1, 3)
 		meteoro.height = meteoro.width
 		meteoro.x = math.random(naveImg:getWidth()/2, screen_width - naveImg:getWidth())
