@@ -30,7 +30,6 @@ function love.load()
 	bala.x = 0
 	bala.y = 0
 	bala.speed = 1000
-	bala.som = tiroSound
 
 	pontos = 1000 --pontos do jogador
 	pressed = false --pressed recebe true quando o usuário apertar no botão play do menu
