@@ -173,8 +173,8 @@ function love.draw()
 		for i, v in ipairs(meteoros) do
 			love.graphics.draw(meteoroImg, v.x, v.y, 0, v.width, v.height)
 
-			love.graphics.print("Onda: " .. onda, screen_width * 0.9, screen_height * 0.1, 0, 2, 2)
-			love.graphics.print("Meteoros restantes: " .. #meteoros, screen_width * 0.8, screen_height * 0.15, 0, 2, 2)
+			love.graphics.print("Onda: " .. onda, screen_width * 0.9, screen_height * 0.1, 0, 1, 1)
+			love.graphics.print("Meteoros restantes: " .. #meteoros, screen_width * 0.8, screen_height * 0.15, 0, 1, 1)
 		end
 
 		for i, v in ipairs (bateus) do
