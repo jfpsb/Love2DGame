@@ -3,6 +3,8 @@ function love.load()
 	spaceImg = love.graphics.newImage("space.jpg")
 	naveImg = love.graphics.newImage("nave.png")
 	balaImg = love.graphics.newImage("bullet.png")
+	balaEsq = love.graphics.newImage("bulletleft.png")
+	balaDir = love.graphics.newImage("bulletright.png")
 	meteoroImg = love.graphics.newImage("meteoro.png")
 	playImg = love.graphics.newImage("play.png")
 	exitImg = love.graphics.newImage("exit.png")
@@ -26,12 +28,15 @@ function love.load()
 	nave.vSpeed = 600
 	nave.hSpeed = 800
 	nave.tiros = {}
+	nave.tirosEsq = {}
+	nave.tirosDir = {}
 
 	--bala
 	bala = {}
 	bala.x = 0
 	bala.y = 0
-	bala.speed = 1000
+	bala.vSpeed = 1000
+	bala.hSpeed = 700
 
 	pontos = 1000 --pontos do jogador
 	pressed = false --pressed recebe true quando o usuário apertar no botão play do menu
@@ -54,6 +59,8 @@ function love.load()
 	meteorosLost = 0 --meteoros perdidos
 	hitCount = 0 --quantidade de vezes que a nave bate em meteoros
 	onda = 1 --número de ondas
+
+	drop = true
 end
 
 function isGameOver()
@@ -107,10 +114,22 @@ function love.update(dt)
 			end
 		end
 
+		if drop then
+			for i, v in ipairs(nave.tirosEsq) do
+				v.y = v.y - (dt * bala.vSpeed)
+				v.x = v.x - (dt * bala.hSpeed)
+			end
+
+			for i, v in ipairs(nave.tirosDir) do
+				v.y = v.y - (dt * bala.vSpeed)
+				v.x = v.x + (dt * bala.hSpeed)
+			end
+		end
+
 		for i,v in ipairs(nave.tiros) do
 
 			--bala sobe
-			v.y = v.y - (dt * bala.speed)
+			v.y = v.y - (dt * bala.vSpeed)
 
 			--remove balas que ficarem fora do range da tela
 			if v.y < 1 then
@@ -171,6 +190,14 @@ function love.draw()
 			love.graphics.draw(balaImg, v.x, v.y)
 		end
 
+		for i,v in ipairs(nave.tirosEsq) do
+			love.graphics.draw(balaEsq, v.x, v.y)
+		end
+
+		for i,v in ipairs(nave.tirosDir) do
+			love.graphics.draw(balaDir, v.x, v.y)
+		end
+
 		for i, v in ipairs(meteoros) do
 			love.graphics.draw(meteoroImg, v.x, v.y, 0, v.width, v.height)
 
@@ -218,8 +245,8 @@ end
 
 --menu
 function menu()
-	play = love.graphics.draw(playImg, (screen_width - playImg:getWidth())/3, (screen_height - playImg:getHeight())/2)
-	exit = love.graphics.draw(exitImg, 2*(screen_width - playImg:getWidth())/3, (screen_height - playImg:getHeight())/2, 0, 2, 2)
+	love.graphics.draw(playImg, (screen_width - playImg:getWidth())/3, (screen_height - playImg:getHeight())/2)
+	love.graphics.draw(exitImg, 2*(screen_width - playImg:getWidth())/3, (screen_height - playImg:getHeight())/2, 0, 2, 2)
 
 	x, y = love.mouse.getPosition()
 
@@ -287,8 +314,19 @@ function atira()
 	local tiro = {}
 	tiro.x = nave.x + (naveImg:getWidth()/2) - (balaImg:getWidth()/2)
 	tiro.y = nave.y
-	tiro.som = bala.som
 	table.insert(nave.tiros, tiro)
+	shotsFired = shotsFired + 1
+
+	local tiroEsq = {}
+	tiroEsq.x = nave.x + (naveImg:getWidth()/2) - (balaImg:getWidth()/2)
+	tiroEsq.y = nave.y
+	table.insert(nave.tirosEsq, tiroEsq)
+	shotsFired = shotsFired + 1
+
+	local tiroDir = {}
+	tiroDir.x = nave.x + (naveImg:getWidth()/2) - (balaImg:getWidth()/2)
+	tiroDir.y = nave.y
+	table.insert(nave.tirosDir, tiroDir)
 	shotsFired = shotsFired + 1
 end
 
