@@ -11,6 +11,7 @@ function love.load()
 	balaDisp = love.graphics.newImage("balasDisp.png")
 	meteoroDownImg = love.graphics.newImage("meteoroDown.png")
 	meteoroPerdidoImg = love.graphics.newImage("meteoroLost.png")
+	colisaoImg = love.graphics.newImage("colisao.png")
 
 	--Configurações da janela
 	love.window.setMode(0, 0, {vsync=false, fullscreen = true})
@@ -148,6 +149,8 @@ function love.update(dt)
 				table.insert(bateus, bateu)
 
 				pontos = pontos - 100
+
+				hitCount = hitCount + 1
 			end
 		end
 	end
@@ -240,10 +243,12 @@ function gameover()
 	love.graphics.draw(balaDisp, screen_width * 0.2, screen_height * 0.3, 0, 1, 1)
 	love.graphics.draw(meteoroDownImg, screen_width * 0.2, screen_height * 0.4, 0, 1, 1)
 	love.graphics.draw(meteoroPerdidoImg, screen_width * 0.2, screen_height * 0.5, 0, 1, 1)
+	love.graphics.draw(colisaoImg, screen_width * 0.2, screen_height * 0.6, 0, 1, 1)
 	love.graphics.setColor(0, 0, 0)
 	love.graphics.print(shotsFired, (screen_width * 0.2) + balaDisp:getWidth() + 20, (screen_height * 0.3) + (balaDisp:getHeight()/2) - 14, 0, 2, 2)
 	love.graphics.print(meteorosDown, (screen_width * 0.2) + meteoroDownImg:getWidth() + 20, (screen_height * 0.4) + (meteoroDownImg:getHeight()/2) - 14, 0, 2, 2)
 	love.graphics.print(meteorosLost, (screen_width * 0.2) + meteoroPerdidoImg:getWidth() + 20, (screen_height * 0.5) + (meteoroPerdidoImg:getHeight()/2) - 14, 0, 2, 2)
+	love.graphics.print(hitCount, (screen_width * 0.2) + colisaoImg:getWidth() + 20, (screen_height * 0.6) + (colisaoImg:getHeight()/2) - 14, 0, 2, 2)
 	love.graphics.setColor(255, 255, 255)
 end
 
