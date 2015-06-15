@@ -15,6 +15,7 @@ function love.load()
 	meteoroPerdidoImg = love.graphics.newImage("meteoroLost.png")
 	colisaoImg = love.graphics.newImage("colisao.png")
 	precisaoImg = love.graphics.newImage("precisao.png")
+	dropImg = love.graphics.newImage("drop.png")
 
 	--Configurações da janela
 	love.window.setMode(0, 0, {vsync=false, fullscreen = true})
@@ -45,6 +46,7 @@ function love.load()
 	minSpeed = 75 --velocidade mínima inicial
 	maxSpeed = 150 --velocidade máxima inicial
 	inicio = 15 --quantidade da primeira onda
+
 	meteoros = {} --vetor para guardar meteoros
 
 	bateus = {} --guarda a localização do meteoro quando a nave bate nele
@@ -60,7 +62,9 @@ function love.load()
 	hitCount = 0 --quantidade de vezes que a nave bate em meteoros
 	onda = 1 --número de ondas
 
-	drop = true
+	drops = {}
+
+	tripleBullet = false
 end
 
 function isGameOver()
@@ -83,9 +87,18 @@ function isMeteorosEmpty (meteoros)
 	end
 end
 
-function love.update(dt)
+function spawnDrop()
+	drop = {}
+	math.randomseed(os.time())
+	drop.x = math.random(0, screen_width)
+	drop.y = -(math.random(800, 1200))
+	drop.speed = 100
 
-	if pressed  and isGameOver() == false then
+	table.insert(drops, drop)
+end
+
+function love.update(dt)
+	if pressed and isGameOver() == false then
 
 		isMeteorosEmpty(meteoros)
 
@@ -93,36 +106,50 @@ function love.update(dt)
 
 		x, y = love.mouse.getPosition()
 
-		--Só desce quando o botao de play for acionado
-		if pressed then
-			for i, v in ipairs(meteoros) do
-				v.y = v.y + (dt * v.speed)
+		for i, v in ipairs(drops) do
+			v.y = v.y + (dt * v.speed)
+		end
 
-				if v.y > screen_height - 1 then
-					table.remove(meteoros, i)
-					pontos = pontos - 50
+		for i, v in ipairs(meteoros) do
+			v.y = v.y + (dt * v.speed)
+			if v.y > screen_height - 1 then
+				table.remove(meteoros, i)
+				pontos = pontos - 50
 
-					perdido = {}
-					perdido.x = v.x
-					perdido.y = screen_height - 50
-					perdido.a = 255
-
-					meteorosLost = meteorosLost + 1
-
-					table.insert(perdidos, perdido)
-				end
+				perdido = {}
+				perdido.x = v.x
+				perdido.y = screen_height - 50
+				perdido.a = 255
+				meteorosLost = meteorosLost + 1
+				table.insert(perdidos, perdido)
 			end
 		end
 
-		if drop then
+		if tripleBullet then
 			for i, v in ipairs(nave.tirosEsq) do
 				v.y = v.y - (dt * bala.vSpeed)
 				v.x = v.x - (dt * bala.hSpeed)
+
+				if v.y < 1 then
+					table.remove(nave.tirosEsq, i)
+				end
+
+				for ii, vv in ipairs(meteoros) do
+					acertouBala(v, vv, i, ii, balaEsq, meteoroImg, meteoros, nave.tirosEsq)
+				end
 			end
 
 			for i, v in ipairs(nave.tirosDir) do
 				v.y = v.y - (dt * bala.vSpeed)
 				v.x = v.x + (dt * bala.hSpeed)
+
+				if v.y < 1 then
+					table.remove(nave.tirosDir, i)
+				end
+
+				for ii, vv in ipairs(meteoros) do
+					acertouBala(v, vv, i, ii, balaDir, meteoroImg, meteoros, nave.tirosDir)
+				end
 			end
 		end
 
@@ -138,19 +165,7 @@ function love.update(dt)
 
 			--checa se algum meteoro foi acertado por alguma bala
 			for ii, vv in ipairs(meteoros) do
-				if CheckCollision(v.x, v.y, balaImg:getWidth(), balaImg:getHeight(), vv.x, vv.y, (meteoroImg:getWidth() * vv.width), (meteoroImg:getHeight() * vv.height)) then
-					pontos = pontos + 50
-					table.remove(meteoros, ii) --remove o meteoro acertado por bala
-					table.remove(nave.tiros, i) --remove bala que acertou meteoro
-					meteorosDown = meteorosDown + 1
-
-					local acertou = {}
-					acertou.x = vv.x
-					acertou.y = vv.y
-					acertou.a = 255
-
-					table.insert(acertos, acertou)
-				end
+				acertouBala(v, vv, i, ii, balaImg, meteoroImg, meteoros, nave.tiros)
 			end
 
 		end
@@ -174,28 +189,50 @@ function love.update(dt)
 	end
 end
 
+function acertouBala(v, vv, i, ii, imagemBala, imagemMeteoro, meteorosTable, tirosTable)
+	if CheckCollision(v.x, v.y, imagemBala:getWidth(), imagemBala:getHeight(), vv.x, vv.y, (imagemMeteoro:getWidth() * vv.width), (imagemMeteoro:getHeight() * vv.height)) then
+		pontos = pontos + 50
+		table.remove(meteorosTable, ii) --remove o meteoro acertado por bala
+		table.remove(tirosTable, i) --remove bala que acertou meteoro
+		meteorosDown = meteorosDown + 1
+
+		local acertou = {}
+		acertou.x = vv.x
+		acertou.y = vv.y
+		acertou.a = 255
+
+		table.insert(acertos, acertou)
+	end
+end
+
 function love.draw()
 
 	desenhaFundo()
 
 	if pressed and isGameOver() == false then
 
-		love.audio.stop()
-
 		love.graphics.draw(naveImg, nave.x, nave.y, 0, 1, 1)
 
 		love.graphics.print("BETA", 0, 0)
+
+		if onda == 1 or onda == 2 then
+			for i, drop in ipairs(drops) do
+				love.graphics.draw(dropImg, drop.x, drop.y, 0, 1, 1)
+			end
+		end
 
 		for i,v in ipairs(nave.tiros) do
 			love.graphics.draw(balaImg, v.x, v.y)
 		end
 
-		for i,v in ipairs(nave.tirosEsq) do
-			love.graphics.draw(balaEsq, v.x, v.y)
-		end
+		if tripleBullet then
+			for i,v in ipairs(nave.tirosEsq) do
+				love.graphics.draw(balaEsq, v.x, v.y)
+			end
 
-		for i,v in ipairs(nave.tirosDir) do
-			love.graphics.draw(balaDir, v.x, v.y)
+			for i,v in ipairs(nave.tirosDir) do
+				love.graphics.draw(balaDir, v.x, v.y)
+			end
 		end
 
 		for i, v in ipairs(meteoros) do
@@ -303,9 +340,12 @@ function spawnaMeteoro ()
 		meteoro.width = math.random(1, 3)
 		meteoro.height = meteoro.width
 		meteoro.x = math.random(naveImg:getWidth()/2, screen_width - naveImg:getWidth())
-		meteoro.y = - (math.random((meteoroImg:getWidth() * meteoro.width), 900))
+		meteoro.y = - (math.random(600, 1500))
 		meteoro.speed = math.random(minSpeed, maxSpeed)
+
 		table.insert(meteoros, meteoro)
+
+		spawnDrop()
 	end
 end
 
@@ -318,13 +358,13 @@ function atira()
 	shotsFired = shotsFired + 1
 
 	local tiroEsq = {}
-	tiroEsq.x = nave.x + (naveImg:getWidth()/2) - (balaImg:getWidth()/2)
+	tiroEsq.x = nave.x + (naveImg:getWidth()/2) - (balaEsq:getWidth()/2)
 	tiroEsq.y = nave.y
 	table.insert(nave.tirosEsq, tiroEsq)
 	shotsFired = shotsFired + 1
 
 	local tiroDir = {}
-	tiroDir.x = nave.x + (naveImg:getWidth()/2) - (balaImg:getWidth()/2)
+	tiroDir.x = nave.x + (naveImg:getWidth()/2) - (balaDir:getWidth()/2)
 	tiroDir.y = nave.y
 	table.insert(nave.tirosDir, tiroDir)
 	shotsFired = shotsFired + 1
