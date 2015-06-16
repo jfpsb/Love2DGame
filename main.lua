@@ -16,6 +16,7 @@ function love.load()
 	colisaoImg = love.graphics.newImage("colisao.png")
 	precisaoImg = love.graphics.newImage("precisao.png")
 	dropImg = love.graphics.newImage("drop.png")
+	meteorosRestantesImg = love.graphics.newImage("meteororestante.png")
 
 	--Configurações da janela
 	love.window.setMode(0, 0, {vsync=false, fullscreen = true})
@@ -64,6 +65,8 @@ function love.load()
 
 	drops = {}
 
+	math.randomseed(os.time())
+
 	tripleBullet = false
 end
 
@@ -102,10 +105,10 @@ end
 
 function spawnDrop()
 	drop = {}
-	drop.x = math.random(0, screen_width)
-	drop.y = -(math.random(800, 1200))
+	drop.x = math.random(0, screen_width - dropImg:getWidth())
+	drop.y = - (math.random(800, 1200))
 	drop.speed = 100
-	drop.tipo = math.random(1, 3)
+	drop.tipo = math.random(1, 2)
 
 	table.insert(drops, drop)
 end
@@ -127,7 +130,14 @@ function love.update(dt)
 			end
 
 			if CheckCollision (nave.x, nave.y, naveImg:getWidth(), naveImg:getHeight(), v.x, v.y, dropImg:getWidth(), dropImg:getHeight()) then
-				tripleBullet = true
+				if v.tipo == 2 then
+					tripleBullet = true
+				else
+					nave.vSpeed = nave.vSpeed + 100
+					nave.hSpeed = nave.hSpeed + 100
+					speedUp = true
+				end
+
 				table.remove(drops, i)
 			end
 		end
@@ -237,6 +247,8 @@ function love.draw()
 
 		love.graphics.print("BETA", 0, 0)
 
+		love.graphics.draw(meteorosRestantesImg, screen_width * 0.87, 0)
+
 		for i, drop in ipairs(drops) do
 			love.graphics.draw(dropImg, drop.x, drop.y, 0, 1, 1)
 			love.graphics.print(#drops, screen_width/2, screen_height/2, 0, 4, 4)
@@ -254,13 +266,15 @@ function love.draw()
 			for i,v in ipairs(nave.tirosDir) do
 				love.graphics.draw(balaDir, v.x, v.y)
 			end
+
+			love.graphics.print("Tiro triplo ativado.", 0, screen_height * 0.95, 0, 2, 2)
 		end
 
 		for i, v in ipairs(meteoros) do
 			love.graphics.draw(meteoroImg, v.x, v.y, 0, v.width, v.height)
 
 			love.graphics.print("Onda: " .. onda, screen_width * 0.9, screen_height * 0.1, 0, 1, 1)
-			love.graphics.print("Meteoros restantes: " .. #meteoros, screen_width * 0.8, screen_height * 0.15, 0, 1, 1)
+			love.graphics.print(#meteoros, screen_width * 0.96, meteorosRestantesImg:getHeight()/2 - 20, 0, 3, 3)
 		end
 
 		for i, v in ipairs (bateus) do
@@ -317,7 +331,7 @@ function menu()
 end
 
 function gameover()
-	X = screen_width * 0.2
+	X = (screen_width - gameoverImg:getWidth())/2
 	Y = screen_height * 0.3
 
 	hSpace = screen_width * 0.05
@@ -330,7 +344,7 @@ function gameover()
 	love.graphics.setColor(255, 255, 255)
 
 	love.graphics.rectangle("fill", 0, 0, screen_width, screen_height)
-	love.graphics.draw(gameoverImg, (screen_width - gameoverImg:getWidth())/2, 50)
+	love.graphics.draw(gameoverImg, X, 50)
 	love.graphics.draw(exitMenu, (screen_width - exitMenu:getWidth()), screen_height - exitMenu:getHeight())
 	love.graphics.draw(balaDisp, X, Y, 0, 1, 1)
 	love.graphics.draw(meteoroDownImg, X + balaDisp:getWidth() + hSpace, Y, 0, 1, 1)
