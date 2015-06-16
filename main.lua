@@ -17,6 +17,9 @@ function love.load()
 	precisaoImg = love.graphics.newImage("precisao.png")
 	dropImg = love.graphics.newImage("drop.png")
 	meteorosRestantesImg = love.graphics.newImage("meteororestante.png")
+	tiroTriploImg = love.graphics.newImage("tirotriplo.png")
+	speedUpImg = love.graphics.newImage("speed.png")
+	ondaImg = love.graphics.newImage("onda.png")
 
 	--Configurações da janela
 	love.window.setMode(0, 0, {vsync=false, fullscreen = true})
@@ -53,6 +56,7 @@ function love.load()
 	bateus = {} --guarda a localização do meteoro quando a nave bate nele
 	acertos = {} --guarda a localização do meteoro quando a nave acerta um tiro nele
 	perdidos = {} --meteoros perdidos
+	pegouDrops = {}
 
 	startTime = love.timer.getTime() --tempo de início de partida
 
@@ -89,7 +93,8 @@ function isMeteorosEmpty (meteoros)
 
 		spawnaMeteoro()
 
-		if onda > 15 and isPrimo(onda) then
+		--if onda > 15 and isPrimo(onda) then
+		if onda > 1 then
 			spawnDrop()
 		end
 	end
@@ -113,6 +118,15 @@ function spawnDrop()
 	table.insert(drops, drop)
 end
 
+function gotDrop(v)
+	pegouDrop = {}
+	pegouDrop.x = v.x
+	pegouDrop.y = v.y
+	pegouDrop.tipo = v.tipo
+	pegouDrop.a = 255
+	table.insert(pegouDrops, pegouDrop)
+end
+
 function love.update(dt)
 	if pressed and isGameOver() == false then
 
@@ -132,10 +146,11 @@ function love.update(dt)
 			if CheckCollision (nave.x, nave.y, naveImg:getWidth(), naveImg:getHeight(), v.x, v.y, dropImg:getWidth(), dropImg:getHeight()) then
 				if v.tipo == 2 then
 					tripleBullet = true
+					gotDrop(v)
 				else
 					nave.vSpeed = nave.vSpeed + 100
 					nave.hSpeed = nave.hSpeed + 100
-					speedUp = true
+					gotDrop(v)
 				end
 
 				table.remove(drops, i)
@@ -148,12 +163,7 @@ function love.update(dt)
 				table.remove(meteoros, i)
 				pontos = pontos - 50
 
-				perdido = {}
-				perdido.x = v.x
-				perdido.y = screen_height - 50
-				perdido.a = 255
-				meteorosLost = meteorosLost + 1
-				table.insert(perdidos, perdido)
+				guardaPerdido(v)
 			end
 		end
 
@@ -206,19 +216,43 @@ function love.update(dt)
 			if CheckCollision(nave.x, nave.y, naveImg:getWidth(), naveImg:getHeight(), v.x, v.y, (v.width * meteoroImg:getWidth()), (v.height * meteoroImg:getHeight())) then
 				table.remove(meteoros, i)
 
-				local bateu = {}
-				bateu.x = nave.x
-				bateu.y = nave.y
-				bateu.a = 255
-
-				table.insert(bateus, bateu)
+				guardaBateu(v)
 
 				pontos = pontos - 100
 
 				hitCount = hitCount + 1
+
+				tripleBullet = false
+				bala.vSpeed = 1000
+				bala.hSpeed = 700
 			end
 		end
 	end
+end
+
+function guardaBateu(v)
+	bateu = {}
+	bateu.x = nave.x
+	bateu.y = nave.y
+	bateu.a = 255
+	table.insert(bateus, bateu)
+end
+
+function guardaPerdido(v)
+	perdido = {}
+	perdido.x = v.x
+	perdido.y = screen_height - 50
+	perdido.a = 255
+	meteorosLost = meteorosLost + 1
+	table.insert(perdidos, perdido)
+end
+
+function guardaAbatido(vv)
+	acertou = {}
+	acertou.x = vv.x
+	acertou.y = vv.y
+	acertou.a = 255
+	table.insert(acertos, acertou)
 end
 
 function acertouBala(v, vv, i, ii, imagemBala, imagemMeteoro, meteorosTable, tirosTable)
@@ -228,13 +262,16 @@ function acertouBala(v, vv, i, ii, imagemBala, imagemMeteoro, meteorosTable, tir
 		table.remove(tirosTable, i) --remove bala que acertou meteoro
 		meteorosDown = meteorosDown + 1
 
-		local acertou = {}
-		acertou.x = vv.x
-		acertou.y = vv.y
-		acertou.a = 255
-
-		table.insert(acertos, acertou)
+		guardaAbatido(vv)
 	end
+end
+
+function printHUD()
+	love.graphics.print("BETA", 0, 0)
+	love.graphics.draw(meteorosRestantesImg, screen_width * 0.83, 0)
+	love.graphics.print(#meteoros, (screen_width * 0.83) + meteorosRestantesImg:getWidth(), meteorosRestantesImg:getHeight()/2 - 20, 0, 3, 3)
+	love.graphics.draw(ondaImg, screen_width * 0.8, meteorosRestantesImg:getHeight())
+	love.graphics.print(onda, (screen_width * 0.8) + ondaImg:getWidth(), meteorosRestantesImg:getHeight() + (ondaImg:getHeight()/2) - 20, 0, 3, 3)
 end
 
 function love.draw()
@@ -245,13 +282,29 @@ function love.draw()
 
 		love.graphics.draw(naveImg, nave.x, nave.y, 0, 1, 1)
 
-		love.graphics.print("BETA", 0, 0)
+		printHUD()
 
-		love.graphics.draw(meteorosRestantesImg, screen_width * 0.87, 0)
+		for i, v in ipairs(pegouDrops) do
+			if v.a > 0 then
+				love.graphics.setColor(255, 255, 255, v.a)
+				v.a = v.a - (love.timer.getDelta() * 50)
+
+				if v.tipo == 2 then
+					love.graphics.draw(tiroTriploImg, (screen_width - tiroTriploImg:getWidth())/2, (screen_height - tiroTriploImg:getHeight())/2)
+				end
+
+				if v.tipo == 1 then
+					love.graphics.draw(speedUpImg, (screen_width - tiroTriploImg:getWidth())/2, (screen_height - tiroTriploImg:getHeight())/2)
+				end
+			else
+				table.remove(pegouDrops, i)
+			end
+		end
+
+		love.graphics.setColor(255, 255, 255)
 
 		for i, drop in ipairs(drops) do
 			love.graphics.draw(dropImg, drop.x, drop.y, 0, 1, 1)
-			love.graphics.print(#drops, screen_width/2, screen_height/2, 0, 4, 4)
 		end
 
 		for i,v in ipairs(nave.tiros) do
@@ -266,15 +319,10 @@ function love.draw()
 			for i,v in ipairs(nave.tirosDir) do
 				love.graphics.draw(balaDir, v.x, v.y)
 			end
-
-			love.graphics.print("Tiro triplo ativado.", 0, screen_height * 0.95, 0, 2, 2)
 		end
 
 		for i, v in ipairs(meteoros) do
 			love.graphics.draw(meteoroImg, v.x, v.y, 0, v.width, v.height)
-
-			love.graphics.print("Onda: " .. onda, screen_width * 0.9, screen_height * 0.1, 0, 1, 1)
-			love.graphics.print(#meteoros, screen_width * 0.96, meteorosRestantesImg:getHeight()/2 - 20, 0, 3, 3)
 		end
 
 		for i, v in ipairs (bateus) do
