@@ -83,16 +83,29 @@ function isMeteorosEmpty (meteoros)
 		end
 		inicio = inicio + 2
 		onda = onda + 1
+
 		spawnaMeteoro()
+
+		if onda > 15 and isPrimo(onda) then
+			spawnDrop()
+		end
+	end
+end
+
+function isPrimo(onda)
+	if onda%2~=0 and onda%3~=0 and onda%5~=0 and onda%7~=0 then
+		return true
+	else
+		return false
 	end
 end
 
 function spawnDrop()
 	drop = {}
-	math.randomseed(os.time())
 	drop.x = math.random(0, screen_width)
 	drop.y = -(math.random(800, 1200))
 	drop.speed = 100
+	drop.tipo = math.random(1, 3)
 
 	table.insert(drops, drop)
 end
@@ -108,6 +121,15 @@ function love.update(dt)
 
 		for i, v in ipairs(drops) do
 			v.y = v.y + (dt * v.speed)
+
+			if v.y > screen_height then
+				table.remove(drops, i)
+			end
+
+			if CheckCollision (nave.x, nave.y, naveImg:getWidth(), naveImg:getHeight(), v.x, v.y, dropImg:getWidth(), dropImg:getHeight()) then
+				tripleBullet = true
+				table.remove(drops, i)
+			end
 		end
 
 		for i, v in ipairs(meteoros) do
@@ -215,10 +237,9 @@ function love.draw()
 
 		love.graphics.print("BETA", 0, 0)
 
-		if onda == 1 or onda == 2 then
-			for i, drop in ipairs(drops) do
-				love.graphics.draw(dropImg, drop.x, drop.y, 0, 1, 1)
-			end
+		for i, drop in ipairs(drops) do
+			love.graphics.draw(dropImg, drop.x, drop.y, 0, 1, 1)
+			love.graphics.print(#drops, screen_width/2, screen_height/2, 0, 4, 4)
 		end
 
 		for i,v in ipairs(nave.tiros) do
@@ -344,8 +365,6 @@ function spawnaMeteoro ()
 		meteoro.speed = math.random(minSpeed, maxSpeed)
 
 		table.insert(meteoros, meteoro)
-
-		spawnDrop()
 	end
 end
 
@@ -357,17 +376,19 @@ function atira()
 	table.insert(nave.tiros, tiro)
 	shotsFired = shotsFired + 1
 
-	local tiroEsq = {}
-	tiroEsq.x = nave.x + (naveImg:getWidth()/2) - (balaEsq:getWidth()/2)
-	tiroEsq.y = nave.y
-	table.insert(nave.tirosEsq, tiroEsq)
-	shotsFired = shotsFired + 1
+	if tripleBullet then
+		local tiroEsq = {}
+		tiroEsq.x = nave.x + (naveImg:getWidth()/2) - (balaEsq:getWidth()/2)
+		tiroEsq.y = nave.y
+		table.insert(nave.tirosEsq, tiroEsq)
+		shotsFired = shotsFired + 1
 
-	local tiroDir = {}
-	tiroDir.x = nave.x + (naveImg:getWidth()/2) - (balaDir:getWidth()/2)
-	tiroDir.y = nave.y
-	table.insert(nave.tirosDir, tiroDir)
-	shotsFired = shotsFired + 1
+		local tiroDir = {}
+		tiroDir.x = nave.x + (naveImg:getWidth()/2) - (balaDir:getWidth()/2)
+		tiroDir.y = nave.y
+		table.insert(nave.tirosDir, tiroDir)
+		shotsFired = shotsFired + 1
+	end
 end
 
 --Ao liberar a tecla espaço aciona o método atira()
