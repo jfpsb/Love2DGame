@@ -41,7 +41,7 @@ function love.load()
 	bala.x = 0
 	bala.y = 0
 	bala.vSpeed = 1000
-	bala.hSpeed = 700
+	bala.hSpeed = 250
 
 	pontos = 1000 --pontos do jogador
 	pressed = false --pressed recebe true quando o usuário apertar no botão play do menu
@@ -68,8 +68,6 @@ function love.load()
 	onda = 1 --número de ondas
 
 	drops = {}
-
-	math.randomseed(os.time())
 
 	tripleBullet = false
 end
@@ -110,6 +108,7 @@ end
 
 function spawnDrop()
 	drop = {}
+	math.randomseed(os.time())
 	drop.x = math.random(0, screen_width - dropImg:getWidth())
 	drop.y = - (math.random(800, 1200))
 	drop.speed = 100
@@ -223,8 +222,8 @@ function love.update(dt)
 				hitCount = hitCount + 1
 
 				tripleBullet = false
-				bala.vSpeed = 1000
-				bala.hSpeed = 700
+				nave.vSpeed = 600
+				nave.hSpeed = 800
 			end
 		end
 	end
