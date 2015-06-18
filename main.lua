@@ -21,6 +21,8 @@ function love.load()
 	speedNaveImg = love.graphics.newImage("speedNave.png")
 	speedBalaImg = love.graphics.newImage("speedBala.png")
 	ondaImg = love.graphics.newImage("onda.png")
+	FMJImg = love.graphics.newImage("fullMetalJacket.png")
+	FMJIcon = love.graphics.newImage("fmjIcon.png")
 
 	--Configurações da janela
 	love.window.setMode(0, 0, {vsync=false, fullscreen = true})
@@ -31,8 +33,8 @@ function love.load()
 	nave = {}
 	nave.x = screen_width/2
 	nave.y = screen_height - 128
-	nave.vSpeed = 900
-	nave.hSpeed = 1100
+	nave.vSpeed = 600
+	nave.hSpeed = 800
 	nave.tiros = {}
 	nave.tirosEsq = {}
 	nave.tirosDir = {}
@@ -69,9 +71,10 @@ function love.load()
 	hitCount = 0 --quantidade de vezes que a nave bate em meteoros
 	onda = 1 --número de ondas
 
+	--Drops
 	drops = {}
-
 	tripleBullet = false
+	fullMetalJacket = false
 end
 
 function isGameOver()
@@ -94,7 +97,7 @@ function isMeteorosEmpty (meteoros)
 		spawnaMeteoro()
 
 		--if onda > 20 and isPrimo(onda) then
-		if onda > 1 then
+		if onda > 0 then
 			spawnDrop()
 		end
 	end
@@ -114,7 +117,9 @@ function spawnDrop()
 	drop.x = math.random(0, screen_width - dropImg:getWidth())
 	drop.y = - (math.random(800, 1200))
 	drop.speed = 100
-	drop.tipo = math.random(1, 3)
+	--drop.tipo = math.random(1, 4)
+
+	drop.tipo = 4
 
 	table.insert(drops, drop)
 end
@@ -138,8 +143,9 @@ function love.update(dt)
 		x, y = love.mouse.getPosition()
 
 		for i, v in ipairs(drops) do
-
-			v.y = v.y + (dt * v.speed)
+			if pause == false then
+				v.y = v.y + (dt * v.speed)
+			end
 
 			if v.y > screen_height then
 				table.remove(drops, i)
@@ -148,27 +154,38 @@ function love.update(dt)
 			if CheckCollision (nave.x, nave.y, naveImg:getWidth(), naveImg:getHeight(), v.x, v.y, dropImg:getWidth(), dropImg:getHeight()) then
 				if v.tipo == 2 then
 					tripleBullet = true
-					gotDrop(v)
 				end
+
 				if v.tipo == 1 then
 					if nave.vSpeed < 1000  and nave.hSpeed < 1200 then
 						nave.vSpeed = nave.vSpeed + 100
 						nave.hSpeed = nave.hSpeed + 100
 					end
-					gotDrop(v)
 				end
+
 				if v.tipo == 3 then
 					if bala.vSpeed < 1500 then
 						bala.vSpeed = bala.vSpeed + 100
 					end
-					gotDrop(v)
 				end
+
+				if v.tipo == 4 then
+					startDropTime = love.timer.getTime()
+					fullMetalJacket = true
+				end
+
+				gotDrop(v)
 
 				table.remove(drops, i)
 			end
 		end
 
+		isFMJTrue()
+
 		for i, v in ipairs(meteoros) do
+			if pause == false then
+				v.y = v.y + (dt * v.speed)
+			end
 			if v.y > screen_height - 1 then
 				table.remove(meteoros, i)
 				pontos = pontos - 50
@@ -178,8 +195,10 @@ function love.update(dt)
 
 		if tripleBullet then
 			for i, v in ipairs(nave.tirosEsq) do
-				v.y = v.y - (dt * bala.vSpeed)
-				v.x = v.x - (dt * bala.hSpeed)
+				if pause == false then
+					v.y = v.y - (dt * bala.vSpeed)
+					v.x = v.x - (dt * bala.hSpeed)
+				end
 
 				if v.y < 1 then
 					table.remove(nave.tirosEsq, i)
@@ -191,9 +210,10 @@ function love.update(dt)
 			end
 
 			for i, v in ipairs(nave.tirosDir) do
-				v.y = v.y - (dt * bala.vSpeed)
-				v.x = v.x + (dt * bala.hSpeed)
-
+				if pause == false then
+					v.y = v.y - (dt * bala.vSpeed)
+					v.x = v.x + (dt * bala.hSpeed)
+				end
 				if v.y < 1 then
 					table.remove(nave.tirosDir, i)
 				end
@@ -207,7 +227,9 @@ function love.update(dt)
 		for i,v in ipairs(nave.tiros) do
 
 			--bala sobe
-			v.y = v.y - (dt * bala.vSpeed)
+			if pause == false then
+				v.y = v.y - (dt * bala.vSpeed)
+			end
 
 			--remove balas que ficarem fora do range da tela
 			if v.y < 1 then
@@ -236,6 +258,15 @@ function love.update(dt)
 				nave.hSpeed = 800
 				bala.vSpeed = 1000
 			end
+		end
+	end
+end
+
+function isFMJTrue()
+	if fullMetalJacket then
+		FMJTimeLeft = 30 - (math.floor(love.timer.getTime() - startDropTime))
+		if FMJTimeLeft < 0 then
+			fullMetalJacket = false
 		end
 	end
 end
@@ -269,7 +300,11 @@ function acertouBala(v, vv, i, ii, imagemBala, imagemMeteoro, meteorosTable, tir
 	if CheckCollision(v.x, v.y, imagemBala:getWidth(), imagemBala:getHeight(), vv.x, vv.y, (imagemMeteoro:getWidth() * vv.width), (imagemMeteoro:getHeight() * vv.height)) then
 		pontos = pontos + 50
 		table.remove(meteorosTable, ii) --remove o meteoro acertado por bala
-		table.remove(tirosTable, i) --remove bala que acertou meteoro
+
+		if fullMetalJacket == false then
+			table.remove(tirosTable, i) --remove bala que acertou meteoro
+		end
+
 		meteorosDown = meteorosDown + 1
 
 		guardaAbatido(vv)
@@ -282,6 +317,11 @@ function printHUD()
 	love.graphics.print(#meteoros, (screen_width * 0.83) + meteorosRestantesImg:getWidth(), meteorosRestantesImg:getHeight()/2 - 20, 0, 3, 3)
 	love.graphics.draw(ondaImg, screen_width * 0.8, meteorosRestantesImg:getHeight())
 	love.graphics.print(onda, (screen_width * 0.8) + ondaImg:getWidth(), meteorosRestantesImg:getHeight() + (ondaImg:getHeight()/2) - 20, 0, 3, 3)
+
+	if fullMetalJacket then
+		love.graphics.draw(FMJIcon, 0, screen_height - FMJIcon:getHeight())
+		love.graphics.print(FMJTimeLeft, FMJIcon:getWidth(), screen_height - FMJIcon:getHeight() + 25, 0, 2, 2)
+	end
 end
 
 function love.draw()
@@ -314,6 +354,10 @@ function love.draw()
 
 				if v.tipo == 3 then
 					love.graphics.draw(speedBalaImg, (screen_width - speedBalaImg:getWidth())/2, (screen_height - speedBalaImg:getHeight())/2)
+				end
+
+				if v.tipo == 4 then
+					love.graphics.draw(FMJImg, (screen_width - FMJImg:getWidth())/2, (screen_height - FMJImg:getHeight())/2)
 				end
 			else
 				table.remove(pegouDrops, i)
@@ -349,23 +393,35 @@ function love.draw()
 		for i, v in ipairs (bateus) do
 			if v.a > 0 then
 				love.graphics.setColor(255, 0, 0, v.a)
-				v.a = v.a - (love.timer.getDelta() * 200)
+
+				if pause == false then
+					v.a = v.a - (love.timer.getDelta() * 200)
+				end
+
 				love.graphics.print("-100", v.x, v.y, 0, 4, 4)
 			end
 		end
 
 		for i, v in ipairs(acertos) do
-			if v.a > 0 then
+			if v.a > 0 and pause == false then
 				love.graphics.setColor(0, 255, 0, v.a)
-				v.a = v.a - (love.timer.getDelta() * 200)
+
+				if pause == false then
+					v.a = v.a - (love.timer.getDelta() * 200)
+				end
+
 				love.graphics.print("+50", v.x, v.y, 0, 4, 4)
 			end
 		end
 
 		for i, v in ipairs(perdidos) do
-			if v.a > 0 then
+			if v.a > 0 and pause == false then
 				love.graphics.setColor(255, 0, 0, v.a)
-				v.a = v.a - (love.timer.getDelta() * 200)
+
+				if pause == false then
+					v.a = v.a - (love.timer.getDelta() * 200)
+				end
+
 				love.graphics.print("-50", v.x, v.y, 0, 4, 4)
 			end
 		end
