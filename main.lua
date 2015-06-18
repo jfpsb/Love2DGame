@@ -31,8 +31,8 @@ function love.load()
 	nave = {}
 	nave.x = screen_width/2
 	nave.y = screen_height - 128
-	nave.vSpeed = 600
-	nave.hSpeed = 800
+	nave.vSpeed = 900
+	nave.hSpeed = 1100
 	nave.tiros = {}
 	nave.tirosEsq = {}
 	nave.tirosDir = {}
@@ -46,6 +46,7 @@ function love.load()
 
 	pontos = 1000 --pontos do jogador
 	play = false --play recebe true quando o usuário apertar no botão play do menu
+	pause = false
 
 	--meteoro
 	minSpeed = 75 --velocidade mínima inicial
@@ -137,6 +138,7 @@ function love.update(dt)
 		x, y = love.mouse.getPosition()
 
 		for i, v in ipairs(drops) do
+
 			v.y = v.y + (dt * v.speed)
 
 			if v.y > screen_height then
@@ -149,12 +151,16 @@ function love.update(dt)
 					gotDrop(v)
 				end
 				if v.tipo == 1 then
-					nave.vSpeed = nave.vSpeed + 100
-					nave.hSpeed = nave.hSpeed + 100
+					if nave.vSpeed < 1000  and nave.hSpeed < 1200 then
+						nave.vSpeed = nave.vSpeed + 100
+						nave.hSpeed = nave.hSpeed + 100
+					end
 					gotDrop(v)
 				end
 				if v.tipo == 3 then
-					bala.vSpeed = bala.vSpeed + 100
+					if bala.vSpeed < 1500 then
+						bala.vSpeed = bala.vSpeed + 100
+					end
 					gotDrop(v)
 				end
 
@@ -163,11 +169,9 @@ function love.update(dt)
 		end
 
 		for i, v in ipairs(meteoros) do
-			v.y = v.y + (dt * v.speed)
 			if v.y > screen_height - 1 then
 				table.remove(meteoros, i)
 				pontos = pontos - 50
-
 				guardaPerdido(v)
 			end
 		end
@@ -293,24 +297,29 @@ function love.draw()
 		for i, v in ipairs(pegouDrops) do
 			if v.a > 0 then
 				love.graphics.setColor(255, 255, 255, v.a)
-				v.a = v.a - (love.timer.getDelta() * 50)
+				v.a = v.a - (love.timer.getDelta() * 75)
 
 				if v.tipo == 1 then
 					love.graphics.draw(speedNaveImg, (screen_width - speedNaveImg:getWidth())/2, (screen_height - speedNaveImg:getHeight())/2)
+					if nave.vSpeed == 1000 then
+						love.graphics.printf("Limite de velocidade atingido.", 0, (screen_height/2) + speedNaveImg:getHeight()/4, screen_width, "center")
+					end
 				end
 
 				if v.tipo == 2 then
 					love.graphics.draw(tiroTriploImg, (screen_width - tiroTriploImg:getWidth())/2, (screen_height - tiroTriploImg:getHeight())/2)
+
+
 				end
 
 				if v.tipo == 3 then
 					love.graphics.draw(speedBalaImg, (screen_width - speedBalaImg:getWidth())/2, (screen_height - speedBalaImg:getHeight())/2)
 				end
-
-
 			else
 				table.remove(pegouDrops, i)
 			end
+
+
 		end
 
 		love.graphics.setColor(255, 255, 255)
@@ -470,37 +479,43 @@ function love.keyreleased(key)
 	if (key == " " or key == "f") and isGameOver() == false then
 		atira()
 	end
+
+	if  (key == "escape") then
+		pause = not pause
+	end
 end
 
 --Manipula o movimento e ação da nave
 function naveMov(dt)
-	if love.keyboard.isDown ("right") then
-		if nave.x < screen_width - 128 then
-			nave.x = nave.x + (nave.hSpeed * dt)
+	if pause == false then
+		if love.keyboard.isDown ("right") then
+			if nave.x < screen_width - 128 then
+				nave.x = nave.x + (nave.hSpeed * dt)
+			end
 		end
-	end
 
-	if love.keyboard.isDown ("left") then
-		if nave.x > 0 then
-			nave.x = nave.x - (nave.hSpeed * dt)
+		if love.keyboard.isDown ("left") then
+			if nave.x > 0 then
+				nave.x = nave.x - (nave.hSpeed * dt)
+			end
 		end
-	end
 
-	if love.keyboard.isDown ("down") then
-		if nave.y < screen_height - 128 then
-			nave.y = nave.y + (nave.vSpeed * dt)
+		if love.keyboard.isDown ("down") then
+			if nave.y < screen_height - 128 then
+				nave.y = nave.y + (nave.vSpeed * dt)
+			end
 		end
-	end
 
-	if love.keyboard.isDown ("up") then
-		if nave.y > 0 then
-			nave.y = nave.y - (nave.vSpeed * dt)
+		if love.keyboard.isDown ("up") then
+			if nave.y > 0 then
+				nave.y = nave.y - (nave.vSpeed * dt)
+			end
 		end
-	end
 
-	if love.keyboard.isDown (" ") then
-		bala.x = nave.x + ((naveImg:getWidth()/2) - 9)
-		bala.y = nave.y - 60
+		if love.keyboard.isDown (" ") then
+			bala.x = nave.x + ((naveImg:getWidth()/2) - 9)
+			bala.y = nave.y - 60
+		end
 	end
 end
 
