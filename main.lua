@@ -18,7 +18,8 @@ function love.load()
 	dropImg = love.graphics.newImage("drop.png")
 	meteorosRestantesImg = love.graphics.newImage("meteororestante.png")
 	tiroTriploImg = love.graphics.newImage("tirotriplo.png")
-	speedUpImg = love.graphics.newImage("speed.png")
+	speedNaveImg = love.graphics.newImage("speedNave.png")
+	speedBalaImg = love.graphics.newImage("speedBala.png")
 	ondaImg = love.graphics.newImage("onda.png")
 
 	--Configurações da janela
@@ -44,7 +45,7 @@ function love.load()
 	bala.hSpeed = 250
 
 	pontos = 1000 --pontos do jogador
-	pressed = false --pressed recebe true quando o usuário apertar no botão play do menu
+	play = false --play recebe true quando o usuário apertar no botão play do menu
 
 	--meteoro
 	minSpeed = 75 --velocidade mínima inicial
@@ -91,7 +92,7 @@ function isMeteorosEmpty (meteoros)
 
 		spawnaMeteoro()
 
-		--if onda > 15 and isPrimo(onda) then
+		--if onda > 20 and isPrimo(onda) then
 		if onda > 1 then
 			spawnDrop()
 		end
@@ -112,7 +113,7 @@ function spawnDrop()
 	drop.x = math.random(0, screen_width - dropImg:getWidth())
 	drop.y = - (math.random(800, 1200))
 	drop.speed = 100
-	drop.tipo = math.random(1, 2)
+	drop.tipo = math.random(1, 3)
 
 	table.insert(drops, drop)
 end
@@ -127,7 +128,7 @@ function gotDrop(v)
 end
 
 function love.update(dt)
-	if pressed and isGameOver() == false then
+	if play and isGameOver() == false then
 
 		isMeteorosEmpty(meteoros)
 
@@ -146,9 +147,14 @@ function love.update(dt)
 				if v.tipo == 2 then
 					tripleBullet = true
 					gotDrop(v)
-				else
+				end
+				if v.tipo == 1 then
 					nave.vSpeed = nave.vSpeed + 100
 					nave.hSpeed = nave.hSpeed + 100
+					gotDrop(v)
+				end
+				if v.tipo == 3 then
+					bala.vSpeed = bala.vSpeed + 100
 					gotDrop(v)
 				end
 
@@ -224,6 +230,7 @@ function love.update(dt)
 				tripleBullet = false
 				nave.vSpeed = 600
 				nave.hSpeed = 800
+				bala.vSpeed = 1000
 			end
 		end
 	end
@@ -277,7 +284,7 @@ function love.draw()
 
 	desenhaFundo()
 
-	if pressed and isGameOver() == false then
+	if play and isGameOver() == false then
 
 		love.graphics.draw(naveImg, nave.x, nave.y, 0, 1, 1)
 
@@ -288,13 +295,19 @@ function love.draw()
 				love.graphics.setColor(255, 255, 255, v.a)
 				v.a = v.a - (love.timer.getDelta() * 50)
 
+				if v.tipo == 1 then
+					love.graphics.draw(speedNaveImg, (screen_width - speedNaveImg:getWidth())/2, (screen_height - speedNaveImg:getHeight())/2)
+				end
+
 				if v.tipo == 2 then
 					love.graphics.draw(tiroTriploImg, (screen_width - tiroTriploImg:getWidth())/2, (screen_height - tiroTriploImg:getHeight())/2)
 				end
 
-				if v.tipo == 1 then
-					love.graphics.draw(speedUpImg, (screen_width - speedUpImg:getWidth())/2, (screen_height - speedUpImg:getHeight())/2)
+				if v.tipo == 3 then
+					love.graphics.draw(speedBalaImg, (screen_width - speedBalaImg:getWidth())/2, (screen_height - speedBalaImg:getHeight())/2)
 				end
+
+
 			else
 				table.remove(pegouDrops, i)
 			end
@@ -352,10 +365,10 @@ function love.draw()
 
 		love.graphics.print("Pontos: " .. pontos, 0, screen_height * 0.015, 0, 3, 3)
 	else
-		if pressed == false and isGameOver() == false then
+		if play == false and isGameOver() == false then
 			menu()
 		else
-			if pressed and isGameOver() then
+			if play and isGameOver() then
 				gameover()
 			end
 		end
@@ -371,7 +384,7 @@ function menu()
 
 	if CheckCollision((screen_width - playImg:getWidth())/3, (screen_height - playImg:getHeight())/2, playImg:getWidth(), playImg:getHeight(), x, y, 5, 5) then
 		if love.mouse.isDown("l") then
-			pressed = true
+			play = true
 			spawnaMeteoro()
 		end
 	end
