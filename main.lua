@@ -294,7 +294,7 @@ function love.draw()
 				end
 
 				if v.tipo == 1 then
-					love.graphics.draw(speedUpImg, (screen_width - tiroTriploImg:getWidth())/2, (screen_height - tiroTriploImg:getHeight())/2)
+					love.graphics.draw(speedUpImg, (screen_width - speedUpImg:getWidth())/2, (screen_height - speedUpImg:getHeight())/2)
 				end
 			else
 				table.remove(pegouDrops, i)
