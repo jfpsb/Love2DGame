@@ -28,6 +28,7 @@ function love.load()
 	dropsAdquiridos = love.graphics.newImage("dropsadquiridos.png")
 	doublePointsIcon = love.graphics.newImage("doublePoints.png")
 	doublePointsImg = love.graphics.newImage("doublePointsDrop.png")
+	pausaImg = love.graphics.newImage("pausa.png")
 
 	--Configurações da janela
 	love.window.setMode(0, 0, {vsync=false, fullscreen = true})
@@ -343,10 +344,10 @@ end
 
 function printHUD()
 	love.graphics.print("BETA", 0, 0)
-	love.graphics.draw(meteorosRestantesImg, screen_width - meteorosRestantesImg:getWidth() - (screen_width * 0.04), 0)
-	love.graphics.print(#meteoros, screen_width - (screen_width * 0.04), meteorosRestantesImg:getHeight()/2 - 20, 0, 3, 3)
-	love.graphics.draw(ondaImg, screen_width - ondaImg:getWidth() - (screen_width * 0.04), meteorosRestantesImg:getHeight())
-	love.graphics.print(onda, screen_width - (screen_width * 0.04), meteorosRestantesImg:getHeight() + (ondaImg:getHeight()/2) - 20, 0, 3, 3)
+	love.graphics.draw(meteorosRestantesImg, screen_width - meteorosRestantesImg:getWidth() - (screen_width * 0.05), 0)
+	love.graphics.print(#meteoros, screen_width - (screen_width * 0.05), meteorosRestantesImg:getHeight()/2 - 20, 0, 3, 3)
+	love.graphics.draw(ondaImg, screen_width - ondaImg:getWidth() - (screen_width * 0.05), meteorosRestantesImg:getHeight())
+	love.graphics.print(onda, screen_width - (screen_width * 0.05), meteorosRestantesImg:getHeight() + (ondaImg:getHeight()/2) - 20, 0, 3, 3)
 
 	if fullMetalJacket and FMJTimeLeft >= 0 then
 		love.graphics.draw(FMJIcon, 0, screen_height - FMJIcon:getHeight())
@@ -370,11 +371,29 @@ function printHUD()
 	end
 end
 
+function pausa()
+	love.graphics.draw(pausaImg, (screen_width - pausaImg:getWidth())/2, screen_height/3 - pausaImg:getHeight()/2)
+	love.graphics.draw(exitMenu, (screen_width - exitMenu:getWidth())/2, screen_height/2 + exitMenu:getHeight())
+
+	x, y = love.mouse.getPosition()
+
+	if CheckCollision((screen_width - exitMenu:getWidth())/2, screen_height/2 + exitMenu:getHeight(), exitMenu:getWidth(), exitMenu:getHeight(), x, y, 1, 1) then
+		if love.mouse.isDown("l") then
+			pontos = -1
+			gameover()
+		end
+	end
+end
+
 function love.draw()
 
 	desenhaFundo()
 
 	if play and isGameOver() == false then
+
+		if pause then
+			pausa()
+		end
 
 		love.graphics.draw(naveImg, nave.x, nave.y, 0, 1, 1)
 
@@ -396,6 +415,9 @@ function love.draw()
 					else
 						if v.tipo == 3 then
 							love.graphics.draw(speedBalaImg, (screen_width - speedBalaImg:getWidth())/2, (screen_height - speedBalaImg:getHeight())/2)
+							if bala.vSpeed == 1500 then
+								love.graphics.printf("Limite de velocidade atingido.", 0, (screen_height/2) + speedBalaImg:getHeight()/4, screen_width, "center")
+							end
 						else
 							if v.tipo == 4 then
 								love.graphics.draw(FMJImg, (screen_width - FMJImg:getWidth())/2, (screen_height - FMJImg:getHeight())/2)
@@ -507,6 +529,12 @@ function menu()
 			spawnaMeteoro()
 		end
 	end
+
+	if CheckCollision(2*(screen_width - playImg:getWidth())/3, (screen_height - playImg:getHeight())/2, exitImg:getWidth(), exitImg:getHeight(), x, y, 1, 1) then
+		if love.mouse.isDown("l") then
+			love.event.push ("quit")
+		end
+	end
 end
 
 function gameover()
@@ -564,24 +592,26 @@ end
 
 --Cria os tiros baseados na posiçào da nave e guarda-os em uma tabela
 function atira()
-	local tiro = {}
-	tiro.x = nave.x + (naveImg:getWidth()/2) - (balaImg:getWidth()/2)
-	tiro.y = nave.y
-	table.insert(nave.tiros, tiro)
-	shotsFired = shotsFired + 1
-
-	if tripleBullet then
-		local tiroEsq = {}
-		tiroEsq.x = nave.x + (naveImg:getWidth()/2) - (balaEsq:getWidth()/2)
-		tiroEsq.y = nave.y
-		table.insert(nave.tirosEsq, tiroEsq)
+	if pause == false then
+		local tiro = {}
+		tiro.x = nave.x + (naveImg:getWidth()/2) - (balaImg:getWidth()/2)
+		tiro.y = nave.y
+		table.insert(nave.tiros, tiro)
 		shotsFired = shotsFired + 1
 
-		local tiroDir = {}
-		tiroDir.x = nave.x + (naveImg:getWidth()/2) - (balaDir:getWidth()/2)
-		tiroDir.y = nave.y
-		table.insert(nave.tirosDir, tiroDir)
-		shotsFired = shotsFired + 1
+		if tripleBullet then
+			local tiroEsq = {}
+			tiroEsq.x = nave.x + (naveImg:getWidth()/2) - (balaEsq:getWidth()/2)
+			tiroEsq.y = nave.y
+			table.insert(nave.tirosEsq, tiroEsq)
+			shotsFired = shotsFired + 1
+
+			local tiroDir = {}
+			tiroDir.x = nave.x + (naveImg:getWidth()/2) - (balaDir:getWidth()/2)
+			tiroDir.y = nave.y
+			table.insert(nave.tirosDir, tiroDir)
+			shotsFired = shotsFired + 1
+		end
 	end
 end
 
