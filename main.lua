@@ -23,12 +23,21 @@ function love.load()
 	ondaImg = love.graphics.newImage("onda.png")
 	FMJImg = love.graphics.newImage("fullMetalJacket.png")
 	FMJIcon = love.graphics.newImage("fmjIcon.png")
+	slowMoIcon = love.graphics.newImage("slowMo.png")
+	slowMoImg = love.graphics.newImage("slowMoDrop.png")
+	dropsAdquiridos = love.graphics.newImage("dropsadquiridos.png")
+	doublePointsIcon = love.graphics.newImage("doublePoints.png")
+	doublePointsImg = love.graphics.newImage("doublePointsDrop.png")
 
 	--Configurações da janela
 	love.window.setMode(0, 0, {vsync=false, fullscreen = true})
 	screen_width = love.graphics.getWidth()
 	screen_height = love.graphics.getHeight()
 
+	iniciaValores()
+end
+
+function iniciaValores()
 	--nave
 	nave = {}
 	nave.x = screen_width/2
@@ -54,9 +63,10 @@ function love.load()
 	minSpeed = 75 --velocidade mínima inicial
 	maxSpeed = 150 --velocidade máxima inicial
 	inicio = 15 --quantidade da primeira onda
+	alturaMaxima = 1500
+	alturaMinima = 600
 
 	meteoros = {} --vetor para guardar meteoros
-
 	bateus = {} --guarda a localização do meteoro quando a nave bate nele
 	acertos = {} --guarda a localização do meteoro quando a nave acerta um tiro nele
 	perdidos = {} --meteoros perdidos
@@ -69,12 +79,15 @@ function love.load()
 	meteorosDown = 0 --meteoros abatidos
 	meteorosLost = 0 --meteoros perdidos
 	hitCount = 0 --quantidade de vezes que a nave bate em meteoros
+	numDrops = 0
 	onda = 1 --número de ondas
 
 	--Drops
 	drops = {}
 	tripleBullet = false
 	fullMetalJacket = false
+	slowMo = false
+	doublePoints = false
 end
 
 function isGameOver()
@@ -90,21 +103,22 @@ function isMeteorosEmpty (meteoros)
 		if onda%5==0 then
 			maxSpeed = maxSpeed + 5
 			minSpeed = minSpeed + 3
+			alturaMaxima = alturaMaxima + 50
+			alturaMinima = alturaMinima + 15
 		end
 		inicio = inicio + 2
 		onda = onda + 1
 
 		spawnaMeteoro()
 
-		--if onda > 20 and isPrimo(onda) then
-		if onda > 0 then
+		if onda > 0 --[[and isDivisivel(onda)]] then
 			spawnDrop()
 		end
 	end
 end
 
-function isPrimo(onda)
-	if onda%2~=0 and onda%3~=0 and onda%5~=0 and onda%7~=0 then
+function isDivisivel(onda)
+	if shotsFired%onda == 0 then
 		return true
 	else
 		return false
@@ -117,9 +131,7 @@ function spawnDrop()
 	drop.x = math.random(0, screen_width - dropImg:getWidth())
 	drop.y = - (math.random(800, 1200))
 	drop.speed = 100
-	--drop.tipo = math.random(1, 4)
-
-	drop.tipo = 4
+	drop.tipo = math.random(4, 6)
 
 	table.insert(drops, drop)
 end
@@ -152,39 +164,55 @@ function love.update(dt)
 			end
 
 			if CheckCollision (nave.x, nave.y, naveImg:getWidth(), naveImg:getHeight(), v.x, v.y, dropImg:getWidth(), dropImg:getHeight()) then
-				if v.tipo == 2 then
-					tripleBullet = true
-				end
-
 				if v.tipo == 1 then
 					if nave.vSpeed < 1000  and nave.hSpeed < 1200 then
 						nave.vSpeed = nave.vSpeed + 100
 						nave.hSpeed = nave.hSpeed + 100
 					end
-				end
-
-				if v.tipo == 3 then
-					if bala.vSpeed < 1500 then
-						bala.vSpeed = bala.vSpeed + 100
+				else
+					if v.tipo == 2 then
+						tripleBullet = true
+					else
+						if v.tipo == 3 then
+							if bala.vSpeed < 1500 then
+								bala.vSpeed = bala.vSpeed + 100
+							end
+						else
+							if v.tipo == 4 then
+								startFMJTime = love.timer.getTime()
+								fullMetalJacket = true
+							else
+								if v.tipo == 5 then
+									startSlowMoTime = love.timer.getTime()
+									slowMo = true
+								else
+									startDPTime = love.timer.getTime()
+									doublePoints = true
+								end
+							end
+						end
 					end
 				end
 
-				if v.tipo == 4 then
-					startDropTime = love.timer.getTime()
-					fullMetalJacket = true
-				end
-
 				gotDrop(v)
+
+				numDrops = numDrops + 1
 
 				table.remove(drops, i)
 			end
 		end
 
-		isFMJTrue()
+		DPTimeLeft = isDropTrue(doublePoints, startDPTime)
+		FMJTimeLeft = isDropTrue(fullMetalJacket, startFMJTime)
+		SlowMoTimeLeft = isDropTrue(slowMo, startSlowMoTime)
 
 		for i, v in ipairs(meteoros) do
 			if pause == false then
-				v.y = v.y + (dt * v.speed)
+				if slowMo then
+					v.y = v.y + (dt * 30)
+				else
+					v.y = v.y + (dt * v.speed)
+				end
 			end
 			if v.y > screen_height - 1 then
 				table.remove(meteoros, i)
@@ -262,12 +290,9 @@ function love.update(dt)
 	end
 end
 
-function isFMJTrue()
-	if fullMetalJacket then
-		FMJTimeLeft = 30 - (math.floor(love.timer.getTime() - startDropTime))
-		if FMJTimeLeft < 0 then
-			fullMetalJacket = false
-		end
+function isDropTrue(variavel, startTime)
+	if variavel then
+		return (30 - (math.floor(love.timer.getTime() - startTime)))
 	end
 end
 
@@ -298,7 +323,12 @@ end
 
 function acertouBala(v, vv, i, ii, imagemBala, imagemMeteoro, meteorosTable, tirosTable)
 	if CheckCollision(v.x, v.y, imagemBala:getWidth(), imagemBala:getHeight(), vv.x, vv.y, (imagemMeteoro:getWidth() * vv.width), (imagemMeteoro:getHeight() * vv.height)) then
-		pontos = pontos + 50
+		if doublePoints then
+			pontos = pontos + 100
+		else
+			pontos = pontos + 50
+		end
+
 		table.remove(meteorosTable, ii) --remove o meteoro acertado por bala
 
 		if fullMetalJacket == false then
@@ -313,14 +343,30 @@ end
 
 function printHUD()
 	love.graphics.print("BETA", 0, 0)
-	love.graphics.draw(meteorosRestantesImg, screen_width * 0.83, 0)
-	love.graphics.print(#meteoros, (screen_width * 0.83) + meteorosRestantesImg:getWidth(), meteorosRestantesImg:getHeight()/2 - 20, 0, 3, 3)
-	love.graphics.draw(ondaImg, screen_width * 0.8, meteorosRestantesImg:getHeight())
-	love.graphics.print(onda, (screen_width * 0.8) + ondaImg:getWidth(), meteorosRestantesImg:getHeight() + (ondaImg:getHeight()/2) - 20, 0, 3, 3)
+	love.graphics.draw(meteorosRestantesImg, screen_width - meteorosRestantesImg:getWidth() - (screen_width * 0.04), 0)
+	love.graphics.print(#meteoros, screen_width - (screen_width * 0.04), meteorosRestantesImg:getHeight()/2 - 20, 0, 3, 3)
+	love.graphics.draw(ondaImg, screen_width - ondaImg:getWidth() - (screen_width * 0.04), meteorosRestantesImg:getHeight())
+	love.graphics.print(onda, screen_width - (screen_width * 0.04), meteorosRestantesImg:getHeight() + (ondaImg:getHeight()/2) - 20, 0, 3, 3)
 
-	if fullMetalJacket then
+	if fullMetalJacket and FMJTimeLeft >= 0 then
 		love.graphics.draw(FMJIcon, 0, screen_height - FMJIcon:getHeight())
 		love.graphics.print(FMJTimeLeft, FMJIcon:getWidth(), screen_height - FMJIcon:getHeight() + 25, 0, 2, 2)
+	else
+		fullMetalJacket = false
+	end
+
+	if slowMo and SlowMoTimeLeft >= 0 then
+		love.graphics.draw(slowMoIcon, 0, screen_height - FMJIcon:getHeight() - slowMoIcon:getHeight())
+		love.graphics.print(SlowMoTimeLeft, slowMoIcon:getWidth(), screen_height - FMJIcon:getHeight() - slowMoIcon:getHeight()/2, 0, 2, 2)
+	else
+		slowMo = false
+	end
+
+	if doublePoints and DPTimeLeft >= 0 then
+		love.graphics.draw(doublePointsIcon, 0, screen_height - FMJIcon:getHeight() - slowMoIcon:getHeight() - doublePointsIcon:getHeight())
+		love.graphics.print(DPTimeLeft, doublePointsIcon:getWidth(), screen_height - FMJIcon:getHeight() - slowMoIcon:getHeight() - doublePointsIcon:getHeight()/2, 0, 2, 2)
+	else
+		doublePoints = false
 	end
 end
 
@@ -344,20 +390,24 @@ function love.draw()
 					if nave.vSpeed == 1000 then
 						love.graphics.printf("Limite de velocidade atingido.", 0, (screen_height/2) + speedNaveImg:getHeight()/4, screen_width, "center")
 					end
-				end
-
-				if v.tipo == 2 then
-					love.graphics.draw(tiroTriploImg, (screen_width - tiroTriploImg:getWidth())/2, (screen_height - tiroTriploImg:getHeight())/2)
-
-
-				end
-
-				if v.tipo == 3 then
-					love.graphics.draw(speedBalaImg, (screen_width - speedBalaImg:getWidth())/2, (screen_height - speedBalaImg:getHeight())/2)
-				end
-
-				if v.tipo == 4 then
-					love.graphics.draw(FMJImg, (screen_width - FMJImg:getWidth())/2, (screen_height - FMJImg:getHeight())/2)
+				else
+					if v.tipo == 2 then
+						love.graphics.draw(tiroTriploImg, (screen_width - tiroTriploImg:getWidth())/2, (screen_height - tiroTriploImg:getHeight())/2)
+					else
+						if v.tipo == 3 then
+							love.graphics.draw(speedBalaImg, (screen_width - speedBalaImg:getWidth())/2, (screen_height - speedBalaImg:getHeight())/2)
+						else
+							if v.tipo == 4 then
+								love.graphics.draw(FMJImg, (screen_width - FMJImg:getWidth())/2, (screen_height - FMJImg:getHeight())/2)
+							else
+								if v.tipo == 5 then
+									love.graphics.draw(slowMoImg, (screen_width - slowMoImg:getWidth())/2, (screen_height - slowMoImg:getHeight())/2)
+								else
+									love.graphics.draw(doublePointsImg, (screen_width - doublePointsImg:getWidth())/2, (screen_height - doublePointsImg:getHeight())/2)
+								end
+							end
+						end
+					end
 				end
 			else
 				table.remove(pegouDrops, i)
@@ -403,19 +453,23 @@ function love.draw()
 		end
 
 		for i, v in ipairs(acertos) do
-			if v.a > 0 and pause == false then
+			if v.a > 0 then
 				love.graphics.setColor(0, 255, 0, v.a)
 
 				if pause == false then
 					v.a = v.a - (love.timer.getDelta() * 200)
 				end
 
-				love.graphics.print("+50", v.x, v.y, 0, 4, 4)
+				if doublePoints then
+					love.graphics.print("+100", v.x, v.y, 0, 4, 4)
+				else
+					love.graphics.print("+50", v.x, v.y, 0, 4, 4)
+				end
 			end
 		end
 
 		for i, v in ipairs(perdidos) do
-			if v.a > 0 and pause == false then
+			if v.a > 0 then
 				love.graphics.setColor(255, 0, 0, v.a)
 
 				if pause == false then
@@ -447,7 +501,7 @@ function menu()
 
 	x, y = love.mouse.getPosition()
 
-	if CheckCollision((screen_width - playImg:getWidth())/3, (screen_height - playImg:getHeight())/2, playImg:getWidth(), playImg:getHeight(), x, y, 5, 5) then
+	if CheckCollision((screen_width - playImg:getWidth())/3, (screen_height - playImg:getHeight())/2, playImg:getWidth(), playImg:getHeight(), x, y, 1, 1) then
 		if love.mouse.isDown("l") then
 			play = true
 			spawnaMeteoro()
@@ -456,31 +510,24 @@ function menu()
 end
 
 function gameover()
-	X = (screen_width - gameoverImg:getWidth())/2
-	Y = screen_height * 0.3
-
-	hSpace = screen_width * 0.05
-	vSpace = screen_height * 0.15
-
-	inBetweenSpace = screen_width * 0.005
-
-	endTime = love.timer.getTime()
 
 	love.graphics.setColor(255, 255, 255)
 
 	love.graphics.rectangle("fill", 0, 0, screen_width, screen_height)
-	love.graphics.draw(gameoverImg, X, 50)
+	love.graphics.draw(gameoverImg, (screen_width - gameoverImg:getWidth())/2, 50)
 	love.graphics.draw(exitMenu, (screen_width - exitMenu:getWidth()), screen_height - exitMenu:getHeight())
-	love.graphics.draw(balaDisp, X, Y, 0, 1, 1)
-	love.graphics.draw(meteoroDownImg, X + balaDisp:getWidth() + hSpace, Y, 0, 1, 1)
-	love.graphics.draw(meteoroPerdidoImg, X +  balaDisp:getWidth() + (hSpace * 2) + meteoroDownImg:getWidth(), Y, 0, 1, 1)
-	love.graphics.draw(colisaoImg, X, Y + vSpace, 0, 1, 1)
-	love.graphics.draw(precisaoImg, X + colisaoImg:getWidth() + hSpace, Y + vSpace, 0, 1, 1)
+	love.graphics.draw(balaDisp, screen_width/4 - balaDisp:getWidth()/2, screen_height * 0.3, 0, 1, 1)
+	love.graphics.draw(meteoroDownImg, (screen_width - meteoroDownImg:getWidth())/2, screen_height * 0.3, 0, 1, 1)
+	love.graphics.draw(meteoroPerdidoImg,(3/2)*(screen_width/2) - meteoroPerdidoImg:getWidth()/2, screen_height * 0.3, 0, 1, 1)
+	love.graphics.draw(colisaoImg, screen_width/4 - colisaoImg:getWidth()/2, screen_height * 0.5, 0, 1, 1)
+	love.graphics.draw(precisaoImg, (screen_width -  precisaoImg:getWidth())/2, screen_height * 0.5, 0, 1, 1)
+	love.graphics.draw(dropsAdquiridos, (3/2)*(screen_width/2) - dropsAdquiridos:getWidth()/2, screen_height * 0.5, 0, 1, 1)
 	love.graphics.setColor(0, 0, 0)
-	love.graphics.print(shotsFired, X + balaDisp:getWidth() + inBetweenSpace, (screen_height * 0.3) + (balaDisp:getHeight()/2) - 14, 0, 2, 2)
-	love.graphics.print(meteorosDown, X + balaDisp:getWidth() + hSpace + meteoroDownImg:getWidth() + inBetweenSpace, (screen_height * 0.3) + (meteoroDownImg:getHeight()/2) - 14, 0, 2, 2)
-	love.graphics.print(meteorosLost, X + balaDisp:getWidth() + (hSpace * 2) + meteoroDownImg:getWidth() + meteoroPerdidoImg:getWidth() + inBetweenSpace, (screen_height * 0.3) + (meteoroPerdidoImg:getHeight()/2) - 14, 0, 2, 2)
-	love.graphics.print(hitCount, X + colisaoImg:getWidth() + inBetweenSpace, Y + vSpace + (colisaoImg:getHeight()/2) - 14, 0, 2, 2)
+	love.graphics.print(shotsFired, screen_width/4 + balaDisp:getWidth()/2, screen_height * 0.3 + balaDisp:getHeight()/4, 0, 3, 3)
+	love.graphics.print(meteorosDown, screen_width/2 + meteoroDownImg:getWidth()/2, (screen_height * 0.3) + (meteoroDownImg:getHeight()/4), 0, 3, 3)
+	love.graphics.print(meteorosLost, (3/2)*(screen_width/2) + meteoroPerdidoImg:getWidth()/2, (screen_height * 0.3) + (meteoroPerdidoImg:getHeight()/4), 0, 3, 3)
+	love.graphics.print(hitCount, screen_width/4 + colisaoImg:getWidth()/2, (screen_height * 0.5) + colisaoImg:getHeight()/4, 0, 3, 3)
+	love.graphics.print(numDrops, (3/2)*(screen_width/2) + dropsAdquiridos:getWidth()/2, (screen_height * 0.5) + dropsAdquiridos:getHeight()/4, 0, 3, 3)
 
 	if shotsFired == 0 then
 		precisao = 0
@@ -488,8 +535,16 @@ function gameover()
 		precisao = meteorosDown/shotsFired
 	end
 
-	love.graphics.print((math.floor(precisao*100)) .. "%", X + colisaoImg:getWidth() + precisaoImg:getWidth() + hSpace + inBetweenSpace, Y + vSpace + (precisaoImg:getHeight()/2) - 14, 0, 2, 2)
+	love.graphics.print((math.floor(precisao*100)) .. "%", screen_width/2 + precisaoImg:getWidth()/2, (screen_height * 0.5) + precisaoImg:getHeight()/4, 0, 3, 3)
 	love.graphics.setColor(255, 255, 255)
+
+	x, y = love.mouse.getPosition()
+
+	if CheckCollision((screen_width - exitMenu:getWidth()), screen_height - exitMenu:getHeight(), exitMenu:getWidth(), exitMenu:getHeight(), x, y, 1, 1) then
+		if love.mouse.isDown("l") then
+			iniciaValores()
+		end
+	end
 end
 
 --Cria na tela os meteoros
@@ -500,7 +555,7 @@ function spawnaMeteoro ()
 		meteoro.width = math.random(1, 3)
 		meteoro.height = meteoro.width
 		meteoro.x = math.random(naveImg:getWidth()/2, screen_width - naveImg:getWidth())
-		meteoro.y = - (math.random(600, 1500))
+		meteoro.y = - (math.random(alturaMinima, alturaMaxima))
 		meteoro.speed = math.random(minSpeed, maxSpeed)
 
 		table.insert(meteoros, meteoro)
