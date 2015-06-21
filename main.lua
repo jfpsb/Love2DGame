@@ -24,7 +24,7 @@ function love.load()
 	hud = love.graphics.newImage("images/hud.png")
 
 	--Configurações da janela
-	love.window.setMode(1366, 768, {vsync=false, fullscreen = false})
+	love.window.setMode(0, 0, {vsync=false, fullscreen = true})
 	screen_width = love.graphics.getWidth()
 	screen_height = love.graphics.getHeight()
 
