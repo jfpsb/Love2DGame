@@ -43,6 +43,7 @@ acoes = {
 					local tiro = {}
 					tiro.x = nave.x + (naveImg:getWidth()/2) - (balaImg:getWidth()/2)
 					tiro.y = nave.y
+					tiro.som = tiroSound
 					table.insert(nave.tiros, tiro)
 					shotsFired = shotsFired + 1
 
