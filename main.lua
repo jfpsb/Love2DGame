@@ -8,25 +8,20 @@ function love.load()
 	exitImg = love.graphics.newImage("images/exit.png")
 	exitMenu = love.graphics.newImage("images/exitMenu.png")
 	gameoverImg = love.graphics.newImage("images/gameover.png")
-	balaDisp = love.graphics.newImage("images/balasDisp.png")
-	meteoroDownImg = love.graphics.newImage("images/meteoroDown.png")
-	meteoroPerdidoImg = love.graphics.newImage("images/meteoroLost.png")
-	colisaoImg = love.graphics.newImage("images/colisao.png")
-	precisaoImg = love.graphics.newImage("images/precisao.png")
 	dropImg = love.graphics.newImage("images/drop.png")
-	meteorosRestantesImg = love.graphics.newImage("images/meteororestante.png")
 	tiroTriploImg = love.graphics.newImage("images/tirotriplo.png")
 	speedNaveImg = love.graphics.newImage("images/speedNave.png")
 	speedBalaImg = love.graphics.newImage("images/speedBala.png")
-	ondaImg = love.graphics.newImage("images/onda.png")
 	FMJImg = love.graphics.newImage("images/fullMetalJacket.png")
 	FMJIcon = love.graphics.newImage("images/fmjIcon.png")
 	slowMoIcon = love.graphics.newImage("images/slowMo.png")
 	slowMoImg = love.graphics.newImage("images/slowMoDrop.png")
-	dropsAdquiridos = love.graphics.newImage("images/dropsadquiridos.png")
 	doublePointsIcon = love.graphics.newImage("images/doublePoints.png")
 	doublePointsImg = love.graphics.newImage("images/doublePointsDrop.png")
 	pausaImg = love.graphics.newImage("images/pausa.png")
+	hf1 = love.graphics.newImage("images/1hf.png")
+	hf2 = love.graphics.newImage("images/2hf.png")
+	hud = love.graphics.newImage("images/hud.png")
 
 	--Configurações da janela
 	love.window.setMode(0, 0, {vsync=false, fullscreen = true})
@@ -315,8 +310,6 @@ function love.draw()
 		end
 
 		love.graphics.setColor(255, 255, 255)
-
-		love.graphics.print("Pontos: " .. pontos, 0, screen_height * 0.015, 0, 3, 3)
 	else
 		if play == false and objIs:isGameOver() == false then
 			objInterface:menu()

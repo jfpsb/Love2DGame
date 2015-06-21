@@ -26,29 +26,34 @@ interface = {
 
 		function o:gameover()
 
-			love.graphics.setColor(255, 255, 255)
+			borda = screen_height * 0.05
+
+			vSpace = hf1:getHeight()/20
+
 
 			love.graphics.rectangle("fill", 0, 0, screen_width, screen_height)
-			love.graphics.draw(gameoverImg, (screen_width - gameoverImg:getWidth())/2, 50)
+			love.graphics.draw(gameoverImg, (screen_width - gameoverImg:getWidth())/2, borda)
 			love.graphics.draw(exitMenu, (screen_width - exitMenu:getWidth()), screen_height - exitMenu:getHeight())
-			love.graphics.draw(balaDisp, screen_width/5 - balaDisp:getWidth()/2, screen_height * 0.3, 0, 1, 1)
-			love.graphics.draw(meteoroDownImg, (screen_width - meteoroDownImg:getWidth())/2, screen_height * 0.3, 0, 1, 1)
-			love.graphics.draw(meteoroPerdidoImg,(3/2)*(screen_width/2) - meteoroPerdidoImg:getWidth()/2, screen_height * 0.3, 0, 1, 1)
-			love.graphics.draw(colisaoImg, screen_width/5 - colisaoImg:getWidth()/2, screen_height * 0.5, 0, 1, 1)
-			love.graphics.draw(precisaoImg, (screen_width -  precisaoImg:getWidth())/2, screen_height * 0.5, 0, 1, 1)
-			love.graphics.draw(dropsAdquiridos, (3/2)*(screen_width/2) - dropsAdquiridos:getWidth()/2, screen_height * 0.5, 0, 1, 1)
+
+			love.graphics.draw(hf1, screen_width/3 - hf1:getWidth()/2, gameoverImg:getHeight() + borda)
+			love.graphics.draw(hf2, 2*(screen_width/3) - hf2:getWidth()/2, gameoverImg:getHeight() + borda)
+
 			love.graphics.setColor(0, 0, 0)
-			love.graphics.print(shotsFired, screen_width/5 + balaDisp:getWidth()/2, screen_height * 0.3 + balaDisp:getHeight()/4, 0, 3, 3)
-			love.graphics.print(meteorosDown, screen_width/2 + meteoroDownImg:getWidth()/2, (screen_height * 0.3) + (meteoroDownImg:getHeight()/4), 0, 3, 3)
-			love.graphics.print(meteorosLost, (3/2)*(screen_width/2) + meteoroPerdidoImg:getWidth()/2, (screen_height * 0.3) + (meteoroPerdidoImg:getHeight()/4), 0, 3, 3)
-			love.graphics.print(hitCount, screen_width/5 + colisaoImg:getWidth()/2, (screen_height * 0.5) + colisaoImg:getHeight()/4, 0, 3, 3)
-			love.graphics.print(numDrops, (3/2)*(screen_width/2) + dropsAdquiridos:getWidth()/2, (screen_height * 0.5) + dropsAdquiridos:getHeight()/4, 0, 3, 3)
+
+			love.graphics.print(meteorosDown, screen_width/3 + hf1:getWidth()/2 + 15, gameoverImg:getHeight() + borda + 2*vSpace, 0, 2, 2)
+			love.graphics.print(meteorosLost, screen_width/3 + hf1:getWidth()/2 + 15, gameoverImg:getHeight() + borda + 9*vSpace, 0, 2, 2)
+			love.graphics.print(hitCount, screen_width/3 + hf1:getWidth()/2 + 15, gameoverImg:getHeight() + borda + 17*vSpace, 0, 2, 2)
+
+			love.graphics.print(shotsFired, 2*(screen_width/3) + hf2:getWidth()/2 + 15, gameoverImg:getHeight() + borda + 2*vSpace, 0, 2, 2)
 
 			if shotsFired == 0 then
 				precisao = 0
 			else
 				precisao = meteorosDown/shotsFired
 			end
+
+			love.graphics.print((math.floor(precisao*100)) .. "%", 2*(screen_width/3) + hf2:getWidth()/2 + 15, gameoverImg:getHeight() + borda + 9*vSpace, 0, 2, 2)
+			love.graphics.print(numDrops, 2*(screen_width/3) + hf2:getWidth()/2 + 15, gameoverImg:getHeight() + borda + 17*vSpace, 0, 2, 2)
 
 			MatchTime = math.floor(endTime - startMatchTime)
 
@@ -62,7 +67,6 @@ interface = {
 				love.graphics.printf("Voce sobreviveu " .. seg .. " segundos.", 0, screen_height * 0.8, screen_width/2, "center", 0, 2, 2)
 			end
 
-			love.graphics.print((math.floor(precisao*100)) .. "%", screen_width/2 + precisaoImg:getWidth()/2, (screen_height * 0.5) + precisaoImg:getHeight()/4, 0, 3, 3)
 			love.graphics.setColor(255, 255, 255)
 
 			x, y = love.mouse.getPosition()
@@ -72,6 +76,8 @@ interface = {
 					iniciaValores()
 				end
 			end
+
+
 		end
 
 		function o:desenhaFundo()
@@ -96,10 +102,11 @@ interface = {
 
 		function o:printHUD()
 			love.graphics.print("BETA", 0, 0)
-			love.graphics.draw(meteorosRestantesImg, screen_width - meteorosRestantesImg:getWidth() - (screen_width * 0.05), 0)
-			love.graphics.print(#meteoros, screen_width - (screen_width * 0.05), meteorosRestantesImg:getHeight()/2 - 20, 0, 3, 3)
-			love.graphics.draw(ondaImg, screen_width - ondaImg:getWidth() - (screen_width * 0.05), meteorosRestantesImg:getHeight())
-			love.graphics.print(onda, screen_width - (screen_width * 0.05), meteorosRestantesImg:getHeight() + (ondaImg:getHeight()/2) - 20, 0, 3, 3)
+			love.graphics.print("Pontos: " .. pontos, 0, screen_height * 0.015, 0, 3, 3)
+			love.graphics.draw(hud, 0, screen_height * 0.06)
+
+			love.graphics.print(#meteoros, hud:getWidth(), screen_height * 0.06 + hud:getHeight()/6, 0, 2, 2)
+			love.graphics.print(onda, hud:getWidth(), 1.5*(screen_height * 0.06 + hud:getHeight()/6), 0, 2, 2)
 
 			if fullMetalJacket and FMJTimeLeft >= 0 then
 				love.graphics.draw(FMJIcon, 0, screen_height - FMJIcon:getHeight())
