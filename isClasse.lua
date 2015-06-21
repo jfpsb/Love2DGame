@@ -35,8 +35,8 @@ isClasse = {
 						ondaDrop = ondaDrop + somaDrop
 						somaDrop = somaDrop + 1
 
-						if somaDrop > 17 then
-							somaDrop = 10
+						if somaDrop > 13 then
+							somaDrop = 7
 						end
 					end
 				end
