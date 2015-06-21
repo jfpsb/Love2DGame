@@ -13,7 +13,7 @@ interface = {
 			if CheckCollision((screen_width - playImg:getWidth())/3, (screen_height - playImg:getHeight())/2, playImg:getWidth(), playImg:getHeight(), x, y, 1, 1) then
 				if love.mouse.isDown("l") then
 					play = true
-					objSpawn:spawnaMeteoro()
+					objIs:isMeteorosEmpty(meteoros)
 				end
 			end
 

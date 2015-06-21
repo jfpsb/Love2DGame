@@ -24,7 +24,7 @@ function love.load()
 	hud = love.graphics.newImage("images/hud.png")
 
 	--Configurações da janela
-	love.window.setMode(0, 0, {vsync=false, fullscreen = true})
+	love.window.setMode(1366, 768, {vsync=false, fullscreen = false})
 	screen_width = love.graphics.getWidth()
 	screen_height = love.graphics.getHeight()
 
@@ -336,7 +336,7 @@ function iniciaValores()
 	--nave
 	nave = {}
 	nave.x = screen_width/2
-	nave.y = screen_height - 128
+	nave.y = screen_height - naveImg:getHeight()
 	nave.vSpeed = 600
 	nave.hSpeed = 800
 	nave.tiros = {}
@@ -357,7 +357,7 @@ function iniciaValores()
 	--meteoro
 	minSpeed = 75 --velocidade mínima inicial
 	maxSpeed = 150 --velocidade máxima inicial
-	inicio = 15 --quantidade da primeira onda
+	inicio = 13 --quantidade da primeira onda (inicializada em isMeteorosEmpty)
 	alturaMaxima = 1500
 	alturaMinima = 600
 
@@ -375,7 +375,7 @@ function iniciaValores()
 	meteorosLost = 0 --meteoros perdidos
 	hitCount = 0 --quantidade de vezes que a nave bate em meteoros
 	numDrops = 0 --Número de drops adquiridos
-	onda = 1 --número de ondas
+	onda = 0 --número de ondas (inicializada em isMeteorosEmpty)
 
 	--Drops
 	drops = {}
