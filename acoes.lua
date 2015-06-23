@@ -62,6 +62,19 @@ acoes = {
 				end
 			end
 
+			function o:atiraMissel()
+				if pause == false then
+					local missel = {}
+					missel.x = nave.x + (naveImg:getWidth()/2) - misselImg:getWidth()
+					missel.y = nave.y + naveImg:getHeight()/2
+					missel.xFixo = nave.x
+					missel.yFixo = nave.y + naveImg:getHeight()/2
+					missel.vSpeed = 700
+					missel.hSpeed = 150
+					table.insert(misseis, missel)
+				end
+			end
+
 			return o;
 		end
 }

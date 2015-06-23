@@ -22,6 +22,7 @@ function love.load()
 	hf1 = love.graphics.newImage("images/1hf.png")
 	hf2 = love.graphics.newImage("images/2hf.png")
 	hud = love.graphics.newImage("images/hud.png")
+	misselImg = love.graphics.newImage("images/missel.png")
 
 	--Configurações da janela
 	love.window.setMode(0, 0, {vsync=false, fullscreen = true})
@@ -45,8 +46,67 @@ function love.load()
 	iniciaValores()
 end
 
+function retornaHip(v, vv)
+	altura = math.abs((vv.y + (meteoroImg:getHeight()/2 * vv.height)) - (v.y))
+	largura = math.abs((vv.x + (meteoroImg:getWidth()/2 * vv.width)) - (v.x))
+
+	hip = math.sqrt(math.pow(altura, 2) + math.pow(largura, 2))
+
+	return hip
+end
+
 function love.update(dt)
 	if play and objIs:isGameOver() == false then
+
+		for i, v in ipairs(circulos) do
+			for ii, vv in ipairs(meteoros) do
+				if (vv.y + (meteoroImg:getHeight() * vv.height) >= v.y - v.raio) and (vv.y <= v.y + v.raio) and (vv.x + (meteoroImg:getWidth() * vv.width) >= v.x - v.raio) and (vv.x <= v.x + v.raio) then
+					distancia = retornaHip(v, vv)
+					if (distancia <= (meteoroImg:getWidth()/2 * vv.width) + v.raio) then
+						objTabelas:guardaAbatido(vv)
+						table.remove(meteoros, ii)
+						pontos = pontos + 50
+					end
+				end
+			end
+		end
+
+		for i, v in ipairs(misseis) do
+			if pause == false then
+				if math.abs(v.xFixo - v.x) < naveImg:getWidth()/2 and v.y == v.yFixo then
+					v.x = v.x - (dt * v.hSpeed)
+				else
+					v.y = v.y - (dt * v.vSpeed)
+				end
+
+				if v.y < 1 then
+					table.remove(misseis, i)
+				end
+
+				for ii, vv in ipairs(meteoros) do
+					if CheckCollision(v.x, v.y, misselImg:getWidth(), misselImg:getHeight(), vv.x, vv.y, (meteoroImg:getWidth() * vv.width), (meteoroImg:getHeight() * vv.height)) then
+
+						table.remove(meteoros, ii) --remove o meteoro acertado por bala
+						table.remove(misseis, i)
+
+						objTabelas:guardaAbatido(vv)
+
+						pontos = pontos + 50
+
+						meteorosDown = meteorosDown + 1
+
+						circulo = {}
+						circulo.x = vv.x + meteoroImg:getWidth()
+						circulo.y = vv.y + meteoroImg:getHeight()
+						circulo.raio = screen_height * 0.05
+						circulo.seg = 100
+						circulo.a = 255
+
+						table.insert(circulos, circulo)
+					end
+				end
+			end
+		end
 
 		if objIs:isGameOver() == false then
 			endTime = love.timer.getTime()
@@ -200,6 +260,28 @@ function love.draw()
 
 	if play and objIs:isGameOver() == false then
 
+		for i, v in ipairs(circulos) do
+			if v.a > 0 then
+				love.graphics.setColor(255, 255, 255, v.a)
+				love.graphics.circle("fill", v.x, v.y, v.raio, v.seg)
+
+				if pause == false then
+					v.a = v.a - (love.timer.getDelta() * 175)
+					if v.raio < screen_height * 0.4 then
+						v.raio = v.raio + (love.timer.getDelta() * 300)
+					end
+				end
+			else
+				table.remove(circulos, i)
+			end
+		end
+
+		love.graphics.setColor(255, 255, 255)
+
+		for i, v in ipairs(misseis) do
+			love.graphics.draw(misselImg, v.x, v.y, 0, 1, 1)
+		end
+
 		if pause then
 			objInterface:pausa()
 		end
@@ -323,8 +405,12 @@ end
 
 --Ao liberar a tecla espaço aciona o método atira()
 function love.keyreleased(key)
-	if (key == " " or key == "f") and objIs:isGameOver() == false then
+	if (key == " ") and objIs:isGameOver() == false then
 		objAcoes:atira()
+	end
+
+	if key == "f" then
+		objAcoes:atiraMissel()
 	end
 
 	if  (key == "escape") then
@@ -354,6 +440,9 @@ function iniciaValores()
 	play = false --play recebe true quando o usuário apertar no botão play do menu
 	pause = false --recebe true quando esc é apertado
 
+	--misseis
+	misseis = {}
+
 	--meteoro
 	minSpeed = 75 --velocidade mínima inicial
 	maxSpeed = 150 --velocidade máxima inicial
@@ -368,6 +457,8 @@ function iniciaValores()
 	pegouDrops = {}
 
 	startTime = love.timer.getTime() --tempo de início de partida
+
+	circulos = {}
 
 	--contadores
 	shotsFired = 0 --tiros efetuados
@@ -389,6 +480,9 @@ function iniciaValores()
 	somaDrop = 7
 
 	startMatchTime = love.timer.getTime()
+
+	xMissel = 0
+	yMissel = 0
 end
 
 function acertouBala(v, vv, i, ii, imagemBala, imagemMeteoro, meteorosTable, tirosTable)
