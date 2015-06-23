@@ -3,6 +3,7 @@ interface = {
 	function ()
 
 	local o = {}
+	fundos = {}
 
 		--menu
 		function o:menu()
@@ -80,10 +81,36 @@ interface = {
 
 		end
 
+		function o:addFundo()
+			for i = 0, 1 do
+				fundo = {}
+				fundo.x = 0
+				fundo.y = (i * -(spaceImg:getHeight())) + (screen_height - spaceImg:getHeight())
+				table.insert(fundos, fundo)
+			end
+		end
+
 		function o:desenhaFundo()
-			love.graphics.draw(spaceImg, (screen_width - spaceImg:getWidth())/2, 0, 0, 1, 1)
-			love.graphics.draw(spaceImg, -(screen_width - spaceImg:getWidth())/2, 0, 0, 1, 1)
-			love.graphics.draw(spaceImg, 2*(screen_width - spaceImg:getWidth())/2, 0, 0, 1, 1)
+
+			if next (fundos) == nil then
+				o:addFundo()
+			end
+
+			for i, v in ipairs(fundos) do
+				if pause == false then
+					v.y = v.y + (love.timer.getDelta() * 20)
+				end
+
+				if #fundos == 1 then
+					o:addFundo()
+				end
+
+				if v.y > screen_height then
+					table.remove(fundos, i)
+				end
+
+				love.graphics.draw(spaceImg, v.x, v.y, 0, 1, 1)
+			end
 		end
 
 		function o:pausa()

@@ -69,7 +69,7 @@ acoes = {
 					missel.y = nave.y + naveImg:getHeight()/2
 					missel.xFixo = nave.x
 					missel.yFixo = nave.y + naveImg:getHeight()/2
-					missel.vSpeed = 700
+					missel.vSpeed = 550
 					missel.hSpeed = 150
 					table.insert(misseis, missel)
 				end

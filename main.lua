@@ -66,6 +66,7 @@ function love.update(dt)
 						objTabelas:guardaAbatido(vv)
 						table.remove(meteoros, ii)
 						pontos = pontos + 50
+						meteorosDown = meteorosDown + 1
 					end
 				end
 			end
@@ -95,14 +96,7 @@ function love.update(dt)
 
 						meteorosDown = meteorosDown + 1
 
-						circulo = {}
-						circulo.x = vv.x + meteoroImg:getWidth()
-						circulo.y = vv.y + meteoroImg:getHeight()
-						circulo.raio = screen_height * 0.05
-						circulo.seg = 100
-						circulo.a = 255
-
-						table.insert(circulos, circulo)
+						objTabelas:guardaCirculo(vv)
 					end
 				end
 			end
@@ -266,7 +260,7 @@ function love.draw()
 				love.graphics.circle("fill", v.x, v.y, v.raio, v.seg)
 
 				if pause == false then
-					v.a = v.a - (love.timer.getDelta() * 175)
+					v.a = v.a - (love.timer.getDelta() * 200)
 					if v.raio < screen_height * 0.4 then
 						v.raio = v.raio + (love.timer.getDelta() * 300)
 					end
@@ -459,6 +453,7 @@ function iniciaValores()
 	startTime = love.timer.getTime() --tempo de início de partida
 
 	circulos = {}
+	fundos = {}
 
 	--contadores
 	shotsFired = 0 --tiros efetuados
@@ -480,9 +475,6 @@ function iniciaValores()
 	somaDrop = 7
 
 	startMatchTime = love.timer.getTime()
-
-	xMissel = 0
-	yMissel = 0
 end
 
 function acertouBala(v, vv, i, ii, imagemBala, imagemMeteoro, meteorosTable, tirosTable)

@@ -38,6 +38,17 @@ salvaTabelas = {
 				table.insert(acertos, acertou)
 			end
 
+			function o:guardaCirculo(vv)
+				circulo = {}
+				circulo.x = vv.x + meteoroImg:getWidth()
+				circulo.y = vv.y + meteoroImg:getHeight()
+				circulo.raio = screen_height * 0.05
+				circulo.seg = 100
+				circulo.a = 255
+
+				table.insert(circulos, circulo)
+			end
+
 			return o;
 
 		end
