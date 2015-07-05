@@ -74,7 +74,6 @@ acoes = {
 					table.insert(misseis, missel)
 				end
 			end
-
 			return o;
 		end
 }
