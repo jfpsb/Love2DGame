@@ -58,6 +58,10 @@ end
 function love.update(dt)
 	if play and objIs:isGameOver() == false then
 
+		if misselOut then
+
+		end
+
 		for i, v in ipairs(circulos) do
 			for ii, vv in ipairs(meteoros) do
 				if (vv.y + (meteoroImg:getHeight() * vv.height) >= v.y - v.raio) and (vv.y <= v.y + v.raio) and (vv.x + (meteoroImg:getWidth() * vv.width) >= v.x - v.raio) and (vv.x <= v.x + v.raio) then
@@ -405,6 +409,7 @@ function love.keyreleased(key)
 
 	if key == "f" then
 		objAcoes:atiraMissel()
+		misselOut = true
 	end
 
 	if  (key == "escape") then

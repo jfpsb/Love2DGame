@@ -135,6 +135,8 @@ interface = {
 			love.graphics.print(#meteoros, hud:getWidth(), screen_height * 0.06 + hud:getHeight()/6, 0, 2, 2)
 			love.graphics.print(onda, hud:getWidth(), (screen_height * 0.06 + hud:getHeight()/6) + hud:getHeight()/2, 0, 2, 2)
 
+			love.graphics.rectangle("fill", 15, screen_height * 0.065 + hud:getHeight(), 20, 150)
+
 			if fullMetalJacket and FMJTimeLeft >= 0 then
 				love.graphics.draw(FMJIcon, 0, screen_height - FMJIcon:getHeight())
 				love.graphics.print(FMJTimeLeft, FMJIcon:getWidth(), screen_height - FMJIcon:getHeight() + 25, 0, 2, 2)
